@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: #12151a;
+  color: #e8eaed;
+}
+
+body {
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+input[type="number"] {
+  appearance: textfield;
+}
