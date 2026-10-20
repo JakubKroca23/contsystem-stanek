@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { BOOTH_D, BOOTH_W, CORNER_X, DOOR_H, DOOR_W, DOOR_X } from "@/lib/layout";
+import { BOOTH_D, BOOTH_SHIFT_X, BOOTH_SHIFT_Z, BOOTH_W, CORNER_X, DOOR_H, DOOR_W, DOOR_X } from "@/lib/layout";
 import { canvasTexture, mat } from "./materials";
 
 function Column({ position }: { position: [number, number, number] }) {
@@ -197,10 +197,10 @@ export function Hall() {
         </mesh>
       ))}
 
-      <Html position={[BOOTH_W / 2, 0.15, BOOTH_D + 0.55]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
+      <Html position={[BOOTH_SHIFT_X + BOOTH_W / 2, 0.15, BOOTH_SHIFT_Z + BOOTH_D + 0.55]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
         <div className="whitespace-nowrap text-[13px] font-medium text-[#3c4450]">10,00 m · ulička</div>
       </Html>
-      <Html position={[-0.7, 0.15, BOOTH_D / 2]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
+      <Html position={[BOOTH_SHIFT_X - 0.7, 0.15, BOOTH_SHIFT_Z + BOOTH_D / 2]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
         <div className="whitespace-nowrap text-[13px] font-medium text-[#3c4450]">5,00 m</div>
       </Html>
     </group>

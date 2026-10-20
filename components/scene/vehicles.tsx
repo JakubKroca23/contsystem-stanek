@@ -112,6 +112,196 @@ function Arch({ position, width }: { position: [number, number, number]; width: 
   );
 }
 
+function SideMirror({ x, y, z }: { x: number; y: number; z: number }) {
+  const s = Math.sign(x) || 1;
+  return (
+    <group position={[x, y, z]}>
+      <mesh position={[s * 0.06, 0, 0]} rotation={[0, 0, s * 0.5]} material={mat.black} castShadow>
+        <boxGeometry args={[0.14, 0.025, 0.025]} />
+      </mesh>
+      <mesh position={[s * 0.14, 0.01, 0.02]} material={mat.black} castShadow>
+        <boxGeometry args={[0.11, 0.16, 0.08]} />
+      </mesh>
+      <mesh position={[s * 0.14, 0.01, 0.055]} material={mat.glassLite}>
+        <boxGeometry args={[0.08, 0.1, 0.012]} />
+      </mesh>
+    </group>
+  );
+}
+
+function GoupilCab({ badge }: { badge: THREE.Texture }) {
+  return (
+    <group>
+      <RoundedBox args={[1.68, 1.12, 1.72]} radius={0.18} smoothness={6} position={[0, 1.24, 1.12]} material={mat.white} castShadow receiveShadow />
+      <mesh position={[0, 1.78, 1.05]} material={mat.white} castShadow>
+        <boxGeometry args={[1.48, 0.08, 1.25]} />
+      </mesh>
+      <mesh position={[0, 1.8, 1.62]} rotation={[-0.55, 0, 0]} material={mat.black} castShadow>
+        <boxGeometry args={[1.5, 0.07, 0.62]} />
+      </mesh>
+      <mesh position={[0, 1.46, 1.98]} rotation={[-0.48, 0, 0]} material={mat.black} castShadow>
+        <boxGeometry args={[1.46, 0.78, 0.07]} />
+      </mesh>
+      <mesh position={[0, 1.48, 2.02]} rotation={[-0.48, 0, 0]} material={mat.glass} castShadow>
+        <boxGeometry args={[1.28, 0.58, 0.03]} />
+      </mesh>
+      <mesh position={[0.15, 1.62, 2.06]} rotation={[-0.5, 0, 0.55]} material={mat.black}>
+        <boxGeometry args={[0.48, 0.018, 0.02]} />
+      </mesh>
+      {[-0.66, 0.66].map((x) => (
+        <mesh key={x} position={[x, 1.42, 1.82]} rotation={[-0.4, 0, x > 0 ? -0.18 : 0.18]} material={mat.black} castShadow>
+          <boxGeometry args={[0.08, 0.72, 0.1]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 1.22, 0.28]} material={mat.black}>
+        <boxGeometry args={[1.66, 0.02, 0.03]} />
+      </mesh>
+
+      <RoundedBox args={[1.5, 0.48, 0.18]} radius={0.08} smoothness={4} position={[0, 0.74, 2.38]} material={mat.blue} castShadow />
+      <mesh position={[0, 0.48, 2.42]} material={mat.black} castShadow>
+        <boxGeometry args={[1.62, 0.16, 0.14]} />
+      </mesh>
+      {[-0.46, 0.46].map((x) => (
+        <group key={x} position={[x, 0.78, 2.5]}>
+          <mesh material={mat.black}>
+            <torusGeometry args={[0.085, 0.02, 10, 22]} />
+          </mesh>
+          <mesh material={lamp}>
+            <sphereGeometry args={[0.062, 18, 18]} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[0, 0.78, 2.5]} rotation={[Math.PI / 2, 0, 0]} material={mat.chrome}>
+        <cylinderGeometry args={[0.05, 0.05, 0.02, 16]} />
+      </mesh>
+      <mesh position={[0, 0.78, 2.515]} rotation={[Math.PI / 2, 0, 0]} material={mat.black}>
+        <cylinderGeometry args={[0.028, 0.028, 0.012, 12]} />
+      </mesh>
+
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <mesh position={[s * 0.86, 1.28, 1.15]} material={mat.glass}>
+            <boxGeometry args={[0.035, 0.58, 0.92]} />
+          </mesh>
+          <mesh position={[s * 0.875, 1.28, 1.15]} material={mat.black}>
+            <boxGeometry args={[0.012, 0.66, 1.02]} />
+          </mesh>
+          <mesh position={[s * 0.89, 0.86, 1.15]} material={mat.black} castShadow>
+            <boxGeometry args={[0.04, 0.22, 1.15]} />
+          </mesh>
+          <mesh position={[s * 0.9, 1.12, 1.55]} material={mat.chrome} castShadow>
+            <boxGeometry args={[0.035, 0.06, 0.14]} />
+          </mesh>
+          <mesh position={[s * 0.9, 0.98, 1.42]} rotation={[0, s > 0 ? Math.PI / 2 : -Math.PI / 2, 0]}>
+            <planeGeometry args={[0.32, 0.14]} />
+            <meshStandardMaterial map={badge} roughness={0.4} />
+          </mesh>
+          <SideMirror x={s * 0.92} y={1.58} z={1.72} />
+        </group>
+      ))}
+      <mesh position={[0.72, 0.58, 1.95]} material={mat.blackSoft} castShadow>
+        <boxGeometry args={[0.28, 0.05, 0.36]} />
+      </mesh>
+      <mesh position={[-0.72, 0.58, 1.95]} material={mat.blackSoft} castShadow>
+        <boxGeometry args={[0.28, 0.05, 0.36]} />
+      </mesh>
+    </group>
+  );
+}
+
+function RangerCab() {
+  return (
+    <group>
+      <mesh position={[0, 0.82, 2.05]} rotation={[-0.28, 0, 0]} material={mat.silver} castShadow receiveShadow>
+        <boxGeometry args={[1.74, 0.1, 1.35]} />
+      </mesh>
+      <mesh position={[0, 0.9, 2.15]} material={mat.silver}>
+        <boxGeometry args={[0.28, 0.06, 1.05]} />
+      </mesh>
+      <mesh position={[0, 0.62, 2.55]} material={mat.silverDark} castShadow>
+        <boxGeometry args={[1.78, 0.28, 0.22]} />
+      </mesh>
+      <mesh position={[0, 0.46, 2.6]} material={mat.black} castShadow>
+        <boxGeometry args={[1.7, 0.12, 0.16]} />
+      </mesh>
+      <mesh position={[0, 0.78, 2.66]} material={mat.black} castShadow>
+        <boxGeometry args={[0.78, 0.32, 0.05]} />
+      </mesh>
+      <mesh position={[0, 0.78, 2.69]} material={mat.chrome}>
+        <boxGeometry args={[0.7, 0.24, 0.015]} />
+      </mesh>
+      {[0.08, 0.02, -0.04, -0.1].map((y) => (
+        <mesh key={y} position={[0, 0.78 + y, 2.705]} material={mat.black}>
+          <boxGeometry args={[0.66, 0.012, 0.012]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.96, 2.64]} material={mat.chrome}>
+        <boxGeometry args={[0.22, 0.1, 0.03]} />
+      </mesh>
+      {[-0.62, 0.62].map((x) => (
+        <group key={x} position={[x, 0.78, 2.66]}>
+          <mesh material={mat.chrome} castShadow>
+            <boxGeometry args={[0.32, 0.16, 0.06]} />
+          </mesh>
+          <mesh position={[0, 0.01, 0.03]} material={lamp}>
+            <boxGeometry args={[0.24, 0.09, 0.02]} />
+          </mesh>
+          <mesh position={[Math.sign(x) * 0.1, -0.1, 0.02]} material={mat.amber}>
+            <boxGeometry args={[0.1, 0.045, 0.02]} />
+          </mesh>
+        </group>
+      ))}
+
+      <RoundedBox args={[1.78, 0.98, 1.28]} radius={0.05} smoothness={4} position={[0, 1.34, 0.98]} material={mat.silver} castShadow receiveShadow />
+      <mesh position={[0, 1.84, 0.9]} material={mat.silver} castShadow>
+        <boxGeometry args={[1.7, 0.05, 1.15]} />
+      </mesh>
+      <mesh position={[0, 1.52, 1.58]} rotation={[-0.5, 0, 0]} material={mat.black} castShadow>
+        <boxGeometry args={[1.58, 0.62, 0.06]} />
+      </mesh>
+      <mesh position={[0, 1.54, 1.62]} rotation={[-0.5, 0, 0]} material={mat.glass} castShadow>
+        <boxGeometry args={[1.4, 0.46, 0.025]} />
+      </mesh>
+      <mesh position={[0.28, 1.68, 1.66]} rotation={[-0.55, 0, 0.4]} material={mat.black}>
+        <boxGeometry args={[0.5, 0.016, 0.018]} />
+      </mesh>
+      <mesh position={[-0.22, 1.66, 1.64]} rotation={[-0.55, 0, -0.35]} material={mat.black}>
+        <boxGeometry args={[0.42, 0.016, 0.018]} />
+      </mesh>
+      <mesh position={[0, 1.22, 0.36]} material={mat.black}>
+        <boxGeometry args={[1.76, 0.015, 0.02]} />
+      </mesh>
+      <mesh position={[0, 1.35, 0.34]} material={mat.glass}>
+        <boxGeometry args={[1.2, 0.28, 0.03]} />
+      </mesh>
+
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <mesh position={[s * 0.9, 1.38, 1.02]} material={mat.black}>
+            <boxGeometry args={[0.018, 0.62, 0.86]} />
+          </mesh>
+          <mesh position={[s * 0.91, 1.4, 1.02]} material={mat.glass}>
+            <boxGeometry args={[0.02, 0.46, 0.7]} />
+          </mesh>
+          <mesh position={[s * 0.91, 0.98, 1.02]} material={mat.blackSoft} castShadow>
+            <boxGeometry args={[0.03, 0.16, 1.05]} />
+          </mesh>
+          <mesh position={[s * 0.93, 1.16, 1.32]} material={mat.chrome} castShadow>
+            <boxGeometry args={[0.03, 0.045, 0.16]} />
+          </mesh>
+          <mesh position={[s * 0.96, 0.55, 1.55]} material={mat.black} castShadow>
+            <boxGeometry args={[0.18, 0.08, 0.55]} />
+          </mesh>
+          <SideMirror x={s * 0.98} y={1.55} z={1.22} />
+        </group>
+      ))}
+      <mesh position={[0.42, 1.98, 0.72]} material={mat.black}>
+        <cylinderGeometry args={[0.006, 0.006, 0.28, 6]} />
+      </mesh>
+    </group>
+  );
+}
+
 /** Goupil G6 dle výkresu: 5127 × 1974 × 2381 mm, podpěry 2988 mm. Převis 586, rozvor 3450, záď 1092. */
 export function Goupil({ pose }: { pose: MachinePose }) {
   const g6 = useLabel("G6", "#1d74d6", "#ffffff", 256, 128);
@@ -141,75 +331,7 @@ export function Goupil({ pose }: { pose: MachinePose }) {
       <Arch position={[0, 0.5, frontAxle]} width={1.92} />
       <Arch position={[0, 0.48, rearAxle]} width={1.86} />
 
-      <RoundedBox args={[1.7, 1.22, 1.92]} radius={0.12} smoothness={4} position={[0, 1.28, 1.22]} material={mat.white} castShadow receiveShadow />
-      <mesh position={[0, 1.84, 1.18]} material={mat.black} castShadow>
-        <boxGeometry args={[1.62, 0.12, 1.55]} />
-      </mesh>
-      <mesh position={[0, 1.42, 2.16]} rotation={[-0.38, 0, 0]} material={mat.glass} castShadow>
-        <boxGeometry args={[1.42, 0.62, 0.05]} />
-      </mesh>
-      <mesh position={[0.86, 1.32, 1.22]} material={mat.glass}>
-        <boxGeometry args={[0.04, 0.52, 1.05]} />
-      </mesh>
-      <mesh position={[-0.86, 1.32, 1.22]} material={mat.glass}>
-        <boxGeometry args={[0.04, 0.52, 1.05]} />
-      </mesh>
-      <mesh position={[0.9, 1.55, 0.42]} material={mat.black} castShadow>
-        <boxGeometry args={[0.07, 0.72, 0.08]} />
-      </mesh>
-      <mesh position={[-0.9, 1.55, 0.42]} material={mat.black} castShadow>
-        <boxGeometry args={[0.07, 0.72, 0.08]} />
-      </mesh>
-      <mesh position={[0.98, 1.42, 1.35]} material={mat.black} castShadow>
-        <boxGeometry args={[0.16, 0.1, 0.22]} />
-      </mesh>
-      <mesh position={[-0.98, 1.42, 1.35]} material={mat.black} castShadow>
-        <boxGeometry args={[0.16, 0.1, 0.22]} />
-      </mesh>
-      <mesh position={[0.92, 1.15, 1.55]} material={mat.chrome}>
-        <boxGeometry args={[0.06, 0.1, 0.16]} />
-      </mesh>
-      <mesh position={[-0.92, 1.15, 1.55]} material={mat.chrome}>
-        <boxGeometry args={[0.06, 0.1, 0.16]} />
-      </mesh>
-      <mesh position={[0.87, 0.98, 1.48]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[0.28, 0.14]} />
-        <meshStandardMaterial map={g6} roughness={0.45} />
-      </mesh>
-
-      <mesh position={[0, 0.72, 2.48]} material={mat.blue} castShadow>
-        <boxGeometry args={[1.52, 0.42, 0.16]} />
-      </mesh>
-      <mesh position={[0, 0.46, 2.5]} material={mat.black} castShadow>
-        <boxGeometry args={[1.58, 0.16, 0.14]} />
-      </mesh>
-      <mesh position={[-0.46, 0.78, 2.56]} material={lamp}>
-        <sphereGeometry args={[0.075, 16, 16]} />
-      </mesh>
-      <mesh position={[0.46, 0.78, 2.56]} material={lamp}>
-        <sphereGeometry args={[0.075, 16, 16]} />
-      </mesh>
-      <mesh position={[0, 0.95, 2.55]} material={mat.chrome}>
-        <cylinderGeometry args={[0.045, 0.045, 0.03, 12]} />
-      </mesh>
-      <mesh position={[0, 1.22, 2.18]} material={mat.black}>
-        <boxGeometry args={[1.2, 0.02, 0.04]} />
-      </mesh>
-      <mesh position={[0.86, 1.05, 1.55]} material={mat.black}>
-        <boxGeometry args={[0.015, 0.7, 0.02]} />
-      </mesh>
-      <mesh position={[-0.86, 1.05, 1.55]} material={mat.black}>
-        <boxGeometry args={[0.015, 0.7, 0.02]} />
-      </mesh>
-      <mesh position={[0, 1.72, 1.95]} rotation={[-0.5, 0, 0.4]} material={mat.black}>
-        <boxGeometry args={[0.46, 0.02, 0.03]} />
-      </mesh>
-      <mesh position={[0.7, 0.62, 1.9]} material={mat.blackSoft} castShadow>
-        <boxGeometry args={[0.22, 0.06, 0.28]} />
-      </mesh>
-      <mesh position={[-0.7, 0.62, 1.9]} material={mat.blackSoft} castShadow>
-        <boxGeometry args={[0.22, 0.06, 0.28]} />
-      </mesh>
+      <GoupilCab badge={g6} />
       <mesh position={[0.72, 0.7, -2.35]} material={mat.hazardRed} castShadow>
         <boxGeometry args={[0.16, 0.1, 0.06]} />
       </mesh>
@@ -293,78 +415,12 @@ export function Foton({ pose }: { pose: MachinePose }) {
         <boxGeometry args={[0.04, 0.28, 0.18]} />
       </mesh>
 
-      <mesh position={[0, 0.78, 2.15]} rotation={[-0.42, 0, 0]} material={mat.silver} castShadow>
-        <boxGeometry args={[1.72, 0.16, 1.15]} />
-      </mesh>
-      <mesh position={[0, 0.58, 2.48]} material={mat.silverDark} castShadow>
-        <boxGeometry args={[1.7, 0.22, 0.28]} />
-      </mesh>
-      <mesh position={[0, 0.72, 2.62]} material={mat.black} castShadow>
-        <boxGeometry args={[1.15, 0.16, 0.06]} />
-      </mesh>
-      {[0.28, 0.14, 0, -0.14, -0.28].map((x) => (
-        <mesh key={x} position={[x, 0.72, 2.66]} material={mat.chrome}>
-          <boxGeometry args={[0.03, 0.1, 0.02]} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0.95, 2.05]} material={mat.silverDark}>
-        <boxGeometry args={[1.2, 0.015, 0.7]} />
-      </mesh>
-      <mesh position={[0.9, 1.15, 1.15]} material={mat.black}>
-        <boxGeometry args={[0.012, 0.55, 0.015]} />
-      </mesh>
-      <mesh position={[-0.9, 1.15, 1.15]} material={mat.black}>
-        <boxGeometry args={[0.012, 0.55, 0.015]} />
-      </mesh>
+      <RangerCab />
       <mesh position={[0.82, 0.78, -2.42]} material={mat.hazardRed} castShadow>
         <boxGeometry args={[0.22, 0.12, 0.06]} />
       </mesh>
       <mesh position={[-0.82, 0.78, -2.42]} material={mat.hazardRed} castShadow>
         <boxGeometry args={[0.22, 0.12, 0.06]} />
-      </mesh>
-      <mesh position={[0.2, 1.55, 1.55]} material={mat.black}>
-        <cylinderGeometry args={[0.008, 0.008, 0.42, 6]} />
-      </mesh>
-      <mesh position={[-0.62, 0.74, 2.6]} material={lamp}>
-        <boxGeometry args={[0.28, 0.1, 0.06]} />
-      </mesh>
-      <mesh position={[0.62, 0.74, 2.6]} material={lamp}>
-        <boxGeometry args={[0.28, 0.1, 0.06]} />
-      </mesh>
-      <mesh position={[0, 0.52, 2.58]} material={mat.black}>
-        <boxGeometry args={[1.55, 0.08, 0.08]} />
-      </mesh>
-
-      <RoundedBox args={[1.76, 0.92, 1.38]} radius={0.06} smoothness={3} position={[0, 1.32, 1.05]} material={mat.silver} castShadow receiveShadow />
-      <mesh position={[0, 1.74, 0.95]} material={mat.silverDark} castShadow>
-        <boxGeometry args={[1.7, 0.06, 1.15]} />
-      </mesh>
-      <mesh position={[0, 1.48, 1.68]} rotation={[-0.42, 0, 0]} material={mat.glass} castShadow>
-        <boxGeometry args={[1.42, 0.48, 0.05]} />
-      </mesh>
-      <mesh position={[0.89, 1.32, 1.0]} material={mat.glass}>
-        <boxGeometry args={[0.04, 0.48, 0.78]} />
-      </mesh>
-      <mesh position={[-0.89, 1.32, 1.0]} material={mat.glass}>
-        <boxGeometry args={[0.04, 0.48, 0.78]} />
-      </mesh>
-      <mesh position={[1.0, 1.42, 1.15]} material={mat.black} castShadow>
-        <boxGeometry args={[0.14, 0.18, 0.26]} />
-      </mesh>
-      <mesh position={[-1.0, 1.42, 1.15]} material={mat.black} castShadow>
-        <boxGeometry args={[0.14, 0.18, 0.26]} />
-      </mesh>
-      <mesh position={[0.92, 1.05, 1.25]} material={mat.chrome}>
-        <boxGeometry args={[0.04, 0.06, 0.42]} />
-      </mesh>
-      <mesh position={[-0.92, 1.05, 1.25]} material={mat.chrome}>
-        <boxGeometry args={[0.04, 0.06, 0.42]} />
-      </mesh>
-      <mesh position={[0.95, 0.48, 0.7]} material={mat.blackSoft} castShadow>
-        <boxGeometry args={[0.16, 0.06, 0.85]} />
-      </mesh>
-      <mesh position={[-0.95, 0.48, 0.7]} material={mat.blackSoft} castShadow>
-        <boxGeometry args={[0.16, 0.06, 0.85]} />
       </mesh>
 
       <mesh position={[0, 0.92, -0.95]} material={mat.silverDark} receiveShadow castShadow>

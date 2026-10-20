@@ -28,6 +28,12 @@ export const mat = {
     opacity: 0.35,
   }),
   yellow: new THREE.MeshStandardMaterial({ color: "#f0b429", roughness: 0.5, metalness: 0.12 }),
+  amber: new THREE.MeshStandardMaterial({
+    color: "#ff9a1f",
+    emissive: "#ff8a00",
+    emissiveIntensity: 0.55,
+    roughness: 0.32,
+  }),
   foot: new THREE.MeshStandardMaterial({ color: "#3a3f44", roughness: 0.7, metalness: 0.3 }),
   alu: new THREE.MeshStandardMaterial({ color: "#e4e8ec", roughness: 0.35, metalness: 0.55 }),
   hazardRed: new THREE.MeshStandardMaterial({ color: "#d7263d", roughness: 0.45, metalness: 0.05 }),

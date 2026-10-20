@@ -9,7 +9,7 @@ Rozmístění vychází z náčrtu `CONTSYSTEM_Exponáty na ploše 5x10m`. Rozm�
 - Kulatý stůl Ø 80 cm a 3 kovové židle, pult 100 × 50 cm s policí a 2 barové židle, péřové vlajky CONTSYSTEM a COMET 3,80 × 0,80 m.
 - Europaleta 1200 × 800 × 144 mm a na ní jeřábové paletové vidle VALLY 2000-600 (vidle 1148 × 100 × 40 mm).
 
-Hala za stánkem odpovídá pohledu z Matterportu u dveří HALA 7 / HALL 7. Stánek leží vlevo od dveří, směrem k rohu haly. Dveře jsou dvoukřídlé, světlost 1,80 × 2,10 m, výška haly ke vazníkům je 9,2 m. Samotný sken Matterportu se do scény nevkládá (vyžaduje jejich SDK). Odkaz je v panelu: [my.matterport.com/show/?m=MTeqx1io6Kr](https://my.matterport.com/show/?m=MTeqx1io6Kr).
+Hala za stánkem odpovídá pohledu z Matterportu u dveří HALA 7 / HALL 7. Stánek je posunutý k čáře těsně před dveřmi a blíž k zadní stěně. Dveře jsou dvoukřídlé, světlost 1,80 × 2,10 m, výška haly ke vazníkům je 9,2 m. Samotný sken Matterportu se do scény nevkládá (vyžaduje jejich SDK). Odkaz je v panelu: [my.matterport.com/show/?m=MTeqx1io6Kr](https://my.matterport.com/show/?m=MTeqx1io6Kr).
 
 U vybraného stroje jdou vysouvat podpěry a zvedat plošina. U X4-14 je plné zvednutí pracovní výška 14 m.
 

@@ -29,7 +29,14 @@ export type Exhibit = {
 export const BOOTH_W = 10;
 export const BOOTH_D = 5;
 
-/** Dveře HALA 7: jedno dvoukřídlé křídlo, světlost 1,80 × 2,10 m. Stánek je vlevo od nich. */
+/**
+ * Celý stánek je posunutý k čáře u dveří haly 7 a k zadní stěně.
+ * Půdorys v `DEFAULT_LAYOUT` zůstává v místních metrech 0–10 × 0–5.
+ */
+export const BOOTH_SHIFT_X = 1.85;
+export const BOOTH_SHIFT_Z = -2.05;
+
+/** Dveře HALA 7: jedno dvoukřídlé křídlo, světlost 1,80 × 2,10 m. Pravý okraj stánku je těsně před nimi. */
 export const DOOR_X = 13;
 export const DOOR_W = 1.8;
 export const DOOR_H = 2.1;

@@ -7,6 +7,8 @@ import { EffectComposer, Outline } from "@react-three/postprocessing";
 import { KernelSize } from "postprocessing";
 import * as THREE from "three";
 import {
+  BOOTH_SHIFT_X,
+  BOOTH_SHIFT_Z,
   DEFAULT_MACHINE,
   PLAN_GHOSTS,
   footprintOutside,
@@ -313,27 +315,29 @@ function SceneBody({
       <spotLight position={[14, 9.6, 4]} angle={0.7} penumbra={0.7} intensity={24} color="#f7f4ee" />
 
       <Hall />
-      <BoothPad />
-      {ghost && <Ghosts />}
-      <ContactShadows position={[5, 0.02, 2.5]} opacity={0.38} scale={22} blur={2.2} far={6} />
+      <group position={[BOOTH_SHIFT_X, 0, BOOTH_SHIFT_Z]}>
+        <BoothPad />
+        {ghost && <Ghosts />}
+        <ContactShadows position={[5, 0.02, 2.5]} opacity={0.38} scale={22} blur={2.2} far={6} />
 
-      {items
-        .filter((item) => !hidden[item.id])
-        .map((item) => (
-          <ExhibitNode
-            key={item.id}
-            item={item}
-            pose={machines[item.id] ?? DEFAULT_MACHINE}
-            selected={selected === item.id}
-            mode={mode}
-            onSelect={onSelect}
-            onHover={onHover}
-            onBind={bind}
-            onMode={onMode}
-            onNudge={onNudge}
-            onPose={onPose}
-          />
-        ))}
+        {items
+          .filter((item) => !hidden[item.id])
+          .map((item) => (
+            <ExhibitNode
+              key={item.id}
+              item={item}
+              pose={machines[item.id] ?? DEFAULT_MACHINE}
+              selected={selected === item.id}
+              mode={mode}
+              onSelect={onSelect}
+              onHover={onHover}
+              onBind={bind}
+              onMode={onMode}
+              onNudge={onNudge}
+              onPose={onPose}
+            />
+          ))}
+      </group>
 
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
@@ -354,7 +358,7 @@ function SceneBody({
         maxPolarAngle={Math.PI / 2 - 0.04}
         minDistance={1.6}
         maxDistance={40}
-        target={[5.4, 1.25, 2.2]}
+        target={[5.4 + BOOTH_SHIFT_X, 1.25, 2.2 + BOOTH_SHIFT_Z]}
       />
 
       <EffectComposer multisampling={4} autoClear={false}>
@@ -407,7 +411,7 @@ export function CanvasScene(props: {
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [7.6, 4.6, 15.8], fov: 38, near: 0.1, far: 120 }}
+      camera={{ position: [7.6 + BOOTH_SHIFT_X, 4.6, 15.8 + BOOTH_SHIFT_Z], fov: 38, near: 0.1, far: 120 }}
       gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
       >
       <Suspense fallback={null}>
