@@ -6,7 +6,7 @@ Rozmístění vychází z náčrtu `CONTSYSTEM_Exponáty na ploše 5x10m`. Rozm�
 
 - **Goupil G6 + COMET** — 5127 × 1974 × 2381 mm, s roztaženými podpěrami šířka 2988 mm (v zadání obálka 5,2 × 3 m), na půdorysu šikmo.
 - **X4-14, FOTON** — Ford Ranger single cab 4×4 XL, 5277 × 1860 mm, podpěry 2910 mm, složená výška 2800 mm (obálka 5,3 × 3 m). Koš 120 kg, pracovní výška 14 m; na stánku je složená poloha.
-- Kulatý stůl Ø 80 cm a 3 kovové židle, pult 100 × 50 cm s policí a 2 barové židle, vlajka CONTSYSTEM a vlajka COMET.
+- Kulatý stůl Ø 80 cm a 3 kovové židle, pult 100 × 50 cm s policí a 2 barové židle, péřové vlajky CONTSYSTEM a COMET 3,80 × 0,80 m.
 
 Hala za stánkem odpovídá pohledu z Matterportu u dveří HALA 7 / HALL 7. Stánek leží vlevo od dveří, směrem k rohu haly. Dveře jsou dvoukřídlé, světlost 1,80 × 2,10 m, výška haly ke vazníkům je 9,2 m. Samotný sken Matterportu se do scény nevkládá (vyžaduje jejich SDK). Odkaz je v panelu: [my.matterport.com/show/?m=MTeqx1io6Kr](https://my.matterport.com/show/?m=MTeqx1io6Kr).
 

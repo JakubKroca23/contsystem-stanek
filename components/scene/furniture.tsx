@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Texture } from "three";
+import * as THREE from "three";
 import { useTexture } from "@react-three/drei";
 import { canvasTexture, mat } from "./materials";
 
@@ -98,18 +98,104 @@ export function BarStool() {
   );
 }
 
-function FlagBody({ map }: { map: Texture }) {
+/** Péřová vlajka 3800 × 800 mm. Tyč vpravo, plachta doleva, jako na výkrese. */
+function useFeatherGeometry() {
+  return useMemo(() => {
+    const y0 = 0.5;
+    const y1 = 3.5;
+    const shape = new THREE.Shape();
+    shape.moveTo(0, y0);
+    shape.lineTo(0, y1);
+    shape.bezierCurveTo(-0.12, y1 + 0.1, -0.5, y1 + 0.04, -0.66, y1 - 0.42);
+    shape.bezierCurveTo(-0.82, y1 - 1.15, -0.8, y0 + 0.45, -0.8, y0);
+    shape.lineTo(0, y0);
+    const geom = new THREE.ShapeGeometry(shape, 28);
+    const pos = geom.attributes.position;
+    const uv = geom.attributes.uv;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (let i = 0; i < pos.count; i += 1) {
+      minX = Math.min(minX, pos.getX(i));
+      maxX = Math.max(maxX, pos.getX(i));
+      minY = Math.min(minY, pos.getY(i));
+      maxY = Math.max(maxY, pos.getY(i));
+    }
+    const spanX = maxX - minX || 1;
+    const spanY = maxY - minY || 1;
+    for (let i = 0; i < pos.count; i += 1) {
+      uv.setXY(i, (pos.getX(i) - minX) / spanX, (pos.getY(i) - minY) / spanY);
+    }
+    uv.needsUpdate = true;
+    return geom;
+  }, []);
+}
+
+function recolorLogo(source: CanvasImageSource, silver: boolean) {
+  const image = source as HTMLImageElement;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const tmp = document.createElement("canvas");
+  tmp.width = width;
+  tmp.height = height;
+  const ctx = tmp.getContext("2d");
+  if (!ctx) return tmp;
+  ctx.drawImage(image, 0, 0, width, height);
+  if (!silver) return tmp;
+  const data = ctx.getImageData(0, 0, width, height);
+  const px = data.data;
+  for (let i = 0; i < px.length; i += 4) {
+    const r = px[i];
+    const g = px[i + 1];
+    const b = px[i + 2];
+    const a = px[i + 3];
+    if (a < 8 || (r > 235 && g > 235 && b > 235)) {
+      px[i + 3] = 0;
+      continue;
+    }
+    const blue = b > r + 25 && b > g + 10;
+    if (!blue) {
+      px[i] = 188;
+      px[i + 1] = 192;
+      px[i + 2] = 198;
+      px[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(data, 0, 0);
+  return tmp;
+}
+
+function drawFeatherLogo(ctx: CanvasRenderingContext2D, logo: CanvasImageSource, cloth: string, silver: boolean) {
+  const width = ctx.canvas.width;
+  const height = ctx.canvas.height;
+  ctx.fillStyle = cloth;
+  ctx.fillRect(0, 0, width, height);
+  const prepared = recolorLogo(logo, silver);
+  const maxAcross = width * 0.7;
+  const maxAlong = height * 0.78;
+  const scale = Math.min(maxAcross / prepared.height, maxAlong / prepared.width);
+  const dw = prepared.width * scale;
+  const dh = prepared.height * scale;
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.drawImage(prepared, -dw / 2, -dh / 2, dw, dh);
+  ctx.restore();
+}
+
+function FeatherFlag({ map }: { map: THREE.Texture }) {
+  const geom = useFeatherGeometry();
   return (
     <group>
-      <mesh position={[0, 0.02, 0]} material={mat.foot} receiveShadow>
-        <boxGeometry args={[0.28, 0.04, 0.28]} />
+      <mesh position={[0, 0.04, 0]} material={mat.black} receiveShadow>
+        <boxGeometry args={[0.4, 0.08, 0.4]} />
       </mesh>
-      <mesh position={[0, 1.4, 0]} material={mat.flagPole} castShadow>
-        <cylinderGeometry args={[0.018, 0.024, 2.76, 12]} />
+      <mesh position={[0, 1.94, 0]} material={mat.black} castShadow>
+        <cylinderGeometry args={[0.015, 0.02, 3.72, 12]} />
       </mesh>
-      <mesh position={[0.38, 1.85, 0]} castShadow>
-        <planeGeometry args={[0.72, 1.5]} />
-        <meshStandardMaterial map={map} roughness={0.75} side={2} />
+      <mesh geometry={geom} castShadow>
+        <meshStandardMaterial map={map} roughness={0.8} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
@@ -117,54 +203,20 @@ function FlagBody({ map }: { map: Texture }) {
 
 export function FlagContsystem() {
   const logo = useTexture("/brand/contsystem-logo.png");
-  const map = useMemo(() => {
-    return canvasTexture(512, 1024, (ctx) => {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 512, 1024);
-      ctx.fillStyle = "#1574d4";
-      ctx.fillRect(0, 0, 512, 36);
-      ctx.fillRect(0, 988, 512, 36);
-      const img = logo.image as CanvasImageSource;
-      ctx.drawImage(img, 36, 300, 440, 116);
-      ctx.fillStyle = "#1c1f24";
-      ctx.font = "600 46px Arial, Helvetica, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("HALA 4C", 256, 520);
-      ctx.fillStyle = "#1574d4";
-      ctx.font = "600 40px Arial, Helvetica, sans-serif";
-      ctx.fillText("STÁNEK 05", 256, 590);
-      ctx.fillStyle = "#5c6570";
-      ctx.font = "400 28px Arial, Helvetica, sans-serif";
-      ctx.fillText("5 × 10 m", 256, 660);
-    });
-  }, [logo]);
-  return <FlagBody map={map} />;
+  const map = useMemo(
+    () => canvasTexture(640, 1280, (ctx) => drawFeatherLogo(ctx, logo.image as CanvasImageSource, "#141416", true)),
+    [logo],
+  );
+  return <FeatherFlag map={map} />;
 }
 
 export function FlagComet() {
+  const logo = useTexture("/brand/comet-logo.png");
   const map = useMemo(
-    () =>
-      canvasTexture(512, 1024, (ctx) => {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, 512, 1024);
-        ctx.fillStyle = "#2f9a45";
-        ctx.fillRect(0, 0, 512, 36);
-        ctx.fillRect(0, 988, 512, 36);
-        ctx.fillStyle = "#0e4ea8";
-        ctx.font = "800 92px Arial, Helvetica, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("COMET", 256, 430);
-        ctx.fillStyle = "#1c1f24";
-        ctx.font = "600 40px Arial, Helvetica, sans-serif";
-        ctx.fillText("X4-14", 256, 540);
-        ctx.font = "500 30px Arial, Helvetica, sans-serif";
-        ctx.fillStyle = "#3d4650";
-        ctx.fillText("pracovní plošiny", 256, 610);
-      }),
-    [],
+    () => canvasTexture(640, 1280, (ctx) => drawFeatherLogo(ctx, logo.image as CanvasImageSource, "#f7f8fa", false)),
+    [logo],
   );
-  return <FlagBody map={map} />;
+  return <FeatherFlag map={map} />;
 }
 
 export function Figure() {
