@@ -22,11 +22,23 @@ export function Wheel({
         <cylinderGeometry args={[radius * 0.72, radius * 0.72, width + 0.012, 24]} />
       </mesh>
       <mesh material={mat.chrome}>
-        <cylinderGeometry args={[radius * 0.42, radius * 0.42, width + 0.02, 16]} />
+        <cylinderGeometry args={[radius * 0.46, radius * 0.46, width + 0.018, 20]} />
       </mesh>
-      <mesh material={mat.blackSoft}>
-        <cylinderGeometry args={[radius * 0.12, radius * 0.12, width + 0.03, 12]} />
+      <mesh material={mat.silverDark}>
+        <cylinderGeometry args={[radius * 0.34, radius * 0.34, width + 0.028, 16]} />
       </mesh>
+      <mesh material={mat.chrome}>
+        <cylinderGeometry args={[radius * 0.14, radius * 0.14, width + 0.04, 12]} />
+      </mesh>
+      {[0, 72, 144, 216, 288].map((deg) => {
+        const a = (deg * Math.PI) / 180;
+        const rr = radius * 0.26;
+        return (
+          <mesh key={deg} position={[Math.cos(a) * rr, 0, Math.sin(a) * rr]} material={mat.chrome}>
+            <cylinderGeometry args={[radius * 0.045, radius * 0.045, width + 0.05, 8]} />
+          </mesh>
+        );
+      })}
     </group>
   );
 }

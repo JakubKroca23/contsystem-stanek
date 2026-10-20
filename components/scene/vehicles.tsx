@@ -192,6 +192,30 @@ export function Goupil({ pose }: { pose: MachinePose }) {
       <mesh position={[0, 0.95, 2.55]} material={mat.chrome}>
         <cylinderGeometry args={[0.045, 0.045, 0.03, 12]} />
       </mesh>
+      <mesh position={[0, 1.22, 2.18]} material={mat.black}>
+        <boxGeometry args={[1.2, 0.02, 0.04]} />
+      </mesh>
+      <mesh position={[0.86, 1.05, 1.55]} material={mat.black}>
+        <boxGeometry args={[0.015, 0.7, 0.02]} />
+      </mesh>
+      <mesh position={[-0.86, 1.05, 1.55]} material={mat.black}>
+        <boxGeometry args={[0.015, 0.7, 0.02]} />
+      </mesh>
+      <mesh position={[0, 1.72, 1.95]} rotation={[-0.5, 0, 0.4]} material={mat.black}>
+        <boxGeometry args={[0.46, 0.02, 0.03]} />
+      </mesh>
+      <mesh position={[0.7, 0.62, 1.9]} material={mat.blackSoft} castShadow>
+        <boxGeometry args={[0.22, 0.06, 0.28]} />
+      </mesh>
+      <mesh position={[-0.7, 0.62, 1.9]} material={mat.blackSoft} castShadow>
+        <boxGeometry args={[0.22, 0.06, 0.28]} />
+      </mesh>
+      <mesh position={[0.72, 0.7, -2.35]} material={mat.hazardRed} castShadow>
+        <boxGeometry args={[0.16, 0.1, 0.06]} />
+      </mesh>
+      <mesh position={[-0.72, 0.7, -2.35]} material={mat.hazardRed} castShadow>
+        <boxGeometry args={[0.16, 0.1, 0.06]} />
+      </mesh>
 
       <mesh position={[0, 0.86, -1.05]} material={mat.whiteDark} castShadow receiveShadow>
         <boxGeometry args={[1.58, 0.08, 2.7]} />
@@ -277,6 +301,29 @@ export function Foton({ pose }: { pose: MachinePose }) {
       </mesh>
       <mesh position={[0, 0.72, 2.62]} material={mat.black} castShadow>
         <boxGeometry args={[1.15, 0.16, 0.06]} />
+      </mesh>
+      {[0.28, 0.14, 0, -0.14, -0.28].map((x) => (
+        <mesh key={x} position={[x, 0.72, 2.66]} material={mat.chrome}>
+          <boxGeometry args={[0.03, 0.1, 0.02]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.95, 2.05]} material={mat.silverDark}>
+        <boxGeometry args={[1.2, 0.015, 0.7]} />
+      </mesh>
+      <mesh position={[0.9, 1.15, 1.15]} material={mat.black}>
+        <boxGeometry args={[0.012, 0.55, 0.015]} />
+      </mesh>
+      <mesh position={[-0.9, 1.15, 1.15]} material={mat.black}>
+        <boxGeometry args={[0.012, 0.55, 0.015]} />
+      </mesh>
+      <mesh position={[0.82, 0.78, -2.42]} material={mat.hazardRed} castShadow>
+        <boxGeometry args={[0.22, 0.12, 0.06]} />
+      </mesh>
+      <mesh position={[-0.82, 0.78, -2.42]} material={mat.hazardRed} castShadow>
+        <boxGeometry args={[0.22, 0.12, 0.06]} />
+      </mesh>
+      <mesh position={[0.2, 1.55, 1.55]} material={mat.black}>
+        <cylinderGeometry args={[0.008, 0.008, 0.42, 6]} />
       </mesh>
       <mesh position={[-0.62, 0.74, 2.6]} material={lamp}>
         <boxGeometry args={[0.28, 0.1, 0.06]} />

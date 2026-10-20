@@ -197,11 +197,6 @@ export function Hall() {
         </mesh>
       ))}
 
-      <Html position={[DOOR_X, 0.15, -0.85]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
-        <div className="whitespace-nowrap rounded bg-white/90 px-2 py-1 text-[12px] font-semibold tracking-wide text-[#c4161c] shadow">
-          ↑ VSTUP DO HALY 7
-        </div>
-      </Html>
       <Html position={[BOOTH_W / 2, 0.15, BOOTH_D + 0.55]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
         <div className="whitespace-nowrap text-[13px] font-medium text-[#3c4450]">10,00 m · ulička</div>
       </Html>

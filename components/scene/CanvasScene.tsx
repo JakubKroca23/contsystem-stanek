@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useRef, type RefObject } from "react";
+import { Suspense, useRef, type RefObject } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { ContactShadows, OrbitControls, TransformControls } from "@react-three/drei";
+import { ContactShadows, Html, OrbitControls, TransformControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import {
   DEFAULT_MACHINE,
   PLAN_GHOSTS,
+  footprintOutside,
   type Exhibit,
   type MachinePose,
   normDeg,
@@ -18,7 +19,6 @@ import { Foton, Goupil } from "./vehicles";
 import { BarStool, Counter, Figure, FlagComet, FlagContsystem, MetalChair, RoundTable } from "./furniture";
 import { BoothPad, Hall } from "./Hall";
 
-export type ViewId = "perspective" | "top" | "entrance";
 export type GizmoMode = "translate" | "rotate";
 
 function Model({ kind, pose }: { kind: Exhibit["kind"]; pose: MachinePose }) {
@@ -46,48 +46,131 @@ function Model({ kind, pose }: { kind: Exhibit["kind"]; pose: MachinePose }) {
   }
 }
 
-function CameraRig({ view }: { view: ViewId }) {
-  const get = useThree((s) => s.get);
-  const controlsReady = useThree((s) => s.controls);
+function SelectionMark({ item, selected, hovered }: { item: Exhibit; selected: boolean; hovered: boolean }) {
+  if (!selected && !hovered) return null;
+  return (
+    <group>
+      <FootprintLines w={item.w + (selected ? 0.16 : 0.04)} d={item.d + (selected ? 0.16 : 0.04)} color={selected ? "#3aa0ff" : "#ffffff"} y={0.07} />
+      {selected && (
+        <mesh position={[0, item.h / 2, 0]}>
+          <boxGeometry args={[item.w + 0.08, item.h + 0.06, item.d + 0.08]} />
+          <meshBasicMaterial color="#3aa0ff" wireframe transparent opacity={0.9} />
+        </mesh>
+      )}
+    </group>
+  );
+}
 
-  useEffect(() => {
-    if (!controlsReady) return;
-    const { camera, controls } = get();
-    const orbit = controls as OrbitControlsImpl | null;
-    if (!orbit) return;
-    camera.up.set(0, 1, 0);
-    if (view === "top") {
-      orbit.target.set(6.2, 0, 1.6);
-      camera.position.set(6.2, 24, 1.6 + 4.2);
-    } else if (view === "entrance") {
-      orbit.target.set(5.2, 1.4, 1.8);
-      camera.position.set(16.2, 3.3, 5.4);
-    } else {
-      orbit.target.set(5.4, 1.25, 2.2);
-      camera.position.set(7.6, 4.6, 15.8);
-    }
-    orbit.update();
-  }, [view, get, controlsReady]);
-
-  return null;
+function ObjectHud({
+  item,
+  mode,
+  pose,
+  onMode,
+  onNudge,
+  onPose,
+}: {
+  item: Exhibit;
+  mode: GizmoMode;
+  pose?: MachinePose;
+  onMode: (mode: GizmoMode) => void;
+  onNudge: (dx: number, dz: number, dRot: number) => void;
+  onPose: (id: string, patch: Partial<MachinePose>) => void;
+}) {
+  const vehicle = item.kind === "goupil" || item.kind === "foton";
+  const btn = "rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20";
+  return (
+    <Html position={[0, item.h + 0.55, 0]} center zIndexRange={[40, 0]} style={{ pointerEvents: "auto" }}>
+      <div
+        className="w-[228px] rounded-xl border border-white/25 bg-[#12151a]/70 p-2 text-white shadow-2xl backdrop-blur-md"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="truncate text-sm font-medium">{item.name}</div>
+        <div className="mt-2 flex gap-1">
+          <button type="button" data-on={mode === "translate"} onClick={() => onMode("translate")} className={`${btn} data-[on=true]:bg-[#1574d4]`}>
+            Posun
+          </button>
+          <button type="button" data-on={mode === "rotate"} onClick={() => onMode("rotate")} className={`${btn} data-[on=true]:bg-[#1574d4]`}>
+            Otáčení
+          </button>
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-1">
+          <button type="button" className={btn} onClick={() => onNudge(-0.1, 0, 0)}>
+            ←
+          </button>
+          <button type="button" className={btn} onClick={() => onNudge(0.1, 0, 0)}>
+            →
+          </button>
+          <button type="button" className={btn} onClick={() => onNudge(0, -0.1, 0)}>
+            ↑
+          </button>
+          <button type="button" className={btn} onClick={() => onNudge(0, 0.1, 0)}>
+            ↓
+          </button>
+          <button type="button" className={`${btn} col-span-2`} onClick={() => onNudge(0, 0, -15)}>
+            ↺ 15°
+          </button>
+          <button type="button" className={`${btn} col-span-2`} onClick={() => onNudge(0, 0, 15)}>
+            15° ↻
+          </button>
+        </div>
+        {vehicle && pose && (
+          <div className="mt-2 flex flex-col gap-1 border-t border-white/15 pt-2">
+            <label className="text-[11px] text-[#d5dbe2]">
+              Podpěry {Math.round(pose.legs * 100)} %
+              <input
+                className="mt-1 w-full accent-[#f0b429]"
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(pose.legs * 100)}
+                onChange={(event) => onPose(item.id, { legs: Number(event.target.value) / 100 })}
+              />
+            </label>
+            <label className="text-[11px] text-[#d5dbe2]">
+              Plošina {Math.round(pose.lift * 100)} %
+              <input
+                className="mt-1 w-full accent-[#2f9a45]"
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(pose.lift * 100)}
+                onChange={(event) => onPose(item.id, { lift: Number(event.target.value) / 100 })}
+              />
+            </label>
+          </div>
+        )}
+        {footprintOutside(item) && <p className="mt-1 text-[11px] text-[#e0a23a]">Půdorys přesahuje plochu.</p>}
+      </div>
+    </Html>
+  );
 }
 
 function ExhibitNode({
   item,
   pose,
   selected,
+  hovered,
   mode,
   snap,
   onSelect,
+  onHover,
   onCommit,
+  onMode,
+  onNudge,
+  onPose,
 }: {
   item: Exhibit;
   pose: MachinePose;
   selected: boolean;
+  hovered: boolean;
   mode: GizmoMode;
   snap: boolean;
   onSelect: (id: string) => void;
+  onHover: (id: string | null) => void;
   onCommit: (id: string, x: number, z: number, rot: number) => void;
+  onMode: (mode: GizmoMode) => void;
+  onNudge: (dx: number, dz: number, dRot: number) => void;
+  onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const dragging = useRef(false);
@@ -117,16 +200,27 @@ function ExhibitNode({
           event.stopPropagation();
           onSelect(item.id);
         }}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          onHover(item.id);
+        }}
+        onPointerOut={(event) => {
+          event.stopPropagation();
+          onHover(null);
+        }}
       >
         <Model kind={item.kind} pose={pose} />
-        {selected && <FootprintLines w={item.w} d={item.d} color="#1574d4" />}
+        <SelectionMark item={item} selected={selected} hovered={hovered} />
+        {selected && (
+          <ObjectHud item={item} mode={mode} pose={pose} onMode={onMode} onNudge={onNudge} onPose={onPose} />
+        )}
       </group>
       {selected && (
         <TransformControls
           object={groupRef as RefObject<THREE.Object3D>}
           mode={mode}
           space="world"
-          size={0.7}
+          size={1.15}
           translationSnap={snap ? 0.05 : null}
           rotationSnap={snap ? THREE.MathUtils.degToRad(5) : null}
           showX={mode === "translate"}
@@ -175,23 +269,31 @@ function SceneBody({
   machines,
   hidden,
   selected,
+  hovered,
   mode,
   snap,
   ghost,
-  view,
   onSelect,
+  onHover,
   onCommit,
+  onMode,
+  onNudge,
+  onPose,
 }: {
   items: Exhibit[];
   machines: Record<string, MachinePose>;
   hidden: Record<string, boolean>;
   selected: string | null;
+  hovered: string | null;
   mode: GizmoMode;
   snap: boolean;
   ghost: boolean;
-  view: ViewId;
   onSelect: (id: string | null) => void;
+  onHover: (id: string | null) => void;
   onCommit: (id: string, x: number, z: number, rot: number) => void;
+  onMode: (mode: GizmoMode) => void;
+  onNudge: (dx: number, dz: number, dRot: number) => void;
+  onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
   return (
     <>
@@ -228,10 +330,15 @@ function SceneBody({
             item={item}
             pose={machines[item.id] ?? DEFAULT_MACHINE}
             selected={selected === item.id}
+            hovered={hovered === item.id}
             mode={mode}
             snap={snap}
             onSelect={onSelect}
+            onHover={onHover}
             onCommit={onCommit}
+            onMode={onMode}
+            onNudge={onNudge}
+            onPose={onPose}
           />
         ))}
 
@@ -253,7 +360,6 @@ function SceneBody({
         maxDistance={40}
         target={[5.4, 1.25, 2.2]}
       />
-      <CameraRig view={view} />
     </>
   );
 }
@@ -263,12 +369,16 @@ export function CanvasScene(props: {
   machines: Record<string, MachinePose>;
   hidden: Record<string, boolean>;
   selected: string | null;
+  hovered: string | null;
   mode: GizmoMode;
   snap: boolean;
   ghost: boolean;
-  view: ViewId;
   onSelect: (id: string | null) => void;
+  onHover: (id: string | null) => void;
   onCommit: (id: string, x: number, z: number, rot: number) => void;
+  onMode: (mode: GizmoMode) => void;
+  onNudge: (dx: number, dz: number, dRot: number) => void;
+  onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
   return (
     <Canvas

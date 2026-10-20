@@ -14,9 +14,9 @@ U vybraného stroje jdou vysouvat podpěry a zvedat plošina. U X4-14 je plné z
 
 ## Ovládání
 
-- Klik na objekt ho vybere. Táhlo posouvá po podlaze nebo otáčí kolem svislé osy.
+- Klik na objekt ho vybere a nad ním se ukáže posun, otáčení a u strojů i podpěry s plošinou. Najetí myší objekt zvýrazní.
 - Souřadnice: **X** 0–10 m zleva doprava, **Z** 0 u vstupu do haly 7 a 5 m směrem do uličky. **0°** míří do uličky.
-- Šipky posouvají výběr, **Q / E** otáčí, **Shift** je hrubší krok. **G** posun, **R** otáčení, **1–3** kamery.
+- Šipky posouvají výběr, **Q / E** otáčí, **Shift** je hrubší krok. **G** posun, **R** otáčení, **H** schová seznam. Seznam vlevo je průhledný a jde skrýt.
 - Bílá obálka je obrys z náčrtu. Rozmístění se ukládá v prohlížeči a jde exportovat do JSON.
 - Figurína 175 cm je jen měřítko, v zadání není.
 

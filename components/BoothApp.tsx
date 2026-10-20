@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import {
   DEFAULT_LAYOUT,
   DEFAULT_MACHINE,
   STORAGE_KEY,
-  footprintOutside,
   isExhibit,
   normDeg,
   round2,
   type Exhibit,
   type MachinePose,
 } from "@/lib/layout";
-import { CanvasScene, type GizmoMode, type ViewId } from "./scene/CanvasScene";
+import { CanvasScene, type GizmoMode } from "./scene/CanvasScene";
 
 function loadLayout(): Exhibit[] {
   if (typeof window === "undefined") return DEFAULT_LAYOUT;
@@ -37,11 +35,11 @@ export default function BoothApp() {
   const [items, setItems] = useState<Exhibit[]>(loadLayout);
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<GizmoMode>("translate");
-  const [snap, setSnap] = useState(true);
+  const snap = true;
   const [ghost, setGhost] = useState(true);
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
-  const [view, setView] = useState<ViewId>("perspective");
-  const [showBrief, setShowBrief] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [machines, setMachines] = useState<Record<string, MachinePose>>({
     goupil: { ...DEFAULT_MACHINE },
     foton: { ...DEFAULT_MACHINE },
@@ -51,10 +49,23 @@ export default function BoothApp() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
 
-  const current = items.find((item) => item.id === selected) ?? null;
-
   const commit = (id: string, x: number, z: number, rot: number) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, x, z, rot } : item)));
+  };
+
+  const nudge = (dx: number, dz: number, dRot: number) => {
+    if (!selected) return;
+    setItems((prev) =>
+      prev.map((entry) =>
+        entry.id === selected
+          ? { ...entry, x: round2(entry.x + dx), z: round2(entry.z + dz), rot: normDeg(entry.rot + dRot) }
+          : entry,
+      ),
+    );
+  };
+
+  const setPose = (id: string, patch: Partial<MachinePose>) => {
+    setMachines((prev) => ({ ...prev, [id]: { ...(prev[id] ?? DEFAULT_MACHINE), ...patch } }));
   };
 
   const itemsRef = useRef(items);
@@ -104,15 +115,13 @@ export default function BoothApp() {
         setMode("translate");
       } else if (event.key === "r" || event.key === "R") {
         setMode("rotate");
-      } else if (event.key === "1") setView("perspective");
-      else if (event.key === "2") setView("top");
-      else if (event.key === "3") setView("entrance");
+      } else if (event.key === "h" || event.key === "H") {
+        setPanelOpen((open) => !open);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-
-  const outside = current ? footprintOutside(current) : false;
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
@@ -124,16 +133,6 @@ export default function BoothApp() {
     URL.revokeObjectURL(url);
   };
 
-  const views = useMemo(
-    () =>
-      [
-        ["perspective", "Perspektiva"],
-        ["top", "Půdorys"],
-        ["entrance", "Od vchodu"],
-      ] as const,
-    [],
-  );
-
   return (
     <div className="relative h-full min-h-screen w-full bg-[#c5ccd3]">
       <div className="absolute inset-0">
@@ -142,222 +141,91 @@ export default function BoothApp() {
           machines={machines}
           hidden={hidden}
           selected={selected}
+          hovered={hovered}
           mode={mode}
           snap={snap}
           ghost={ghost}
-          view={view}
           onSelect={setSelected}
+          onHover={setHovered}
           onCommit={commit}
+          onMode={setMode}
+          onNudge={nudge}
+          onPose={setPose}
         />
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-end p-3 md:left-[372px]">
-        <div className="pointer-events-auto flex gap-1 rounded-full bg-[#12151a]/90 p-1 text-sm text-white shadow-lg backdrop-blur">
-          {views.map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              data-on={view === id}
-              onClick={() => setView(id)}
-              className="rounded-full px-3 py-1.5 data-[on=true]:bg-[#1574d4] data-[on=false]:hover:bg-white/10"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <aside className="absolute inset-x-0 bottom-0 z-20 flex max-h-[48vh] flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-[#12151a]/95 text-[#e8eaed] shadow-2xl backdrop-blur md:inset-y-0 md:left-0 md:right-auto md:max-h-none md:w-[360px] md:rounded-none">
-        <header className="border-b border-white/10 px-4 py-3">
-          <div className="text-[11px] font-semibold tracking-[0.16em] text-[#7eb6f0]">CONTSYSTEM GROUP</div>
-          <h1 className="mt-1 text-lg font-semibold leading-tight">Stánek 05 · Hala 4C</h1>
-          <p className="mt-1 text-sm text-[#b7c0cb]">
-            Plocha 5 × 10 m je vlevo od dveří haly 7, u rohu. Dveře mají 2,10 × 1,80 m. Goupil je vysoký 2,38 m, složený Ranger 2,80 m.
-          </p>
+      {panelOpen ? (
+      <aside className="absolute inset-x-0 bottom-0 z-20 flex max-h-[42vh] flex-col overflow-hidden rounded-t-2xl border border-white/20 bg-[#12151a]/45 text-[#e8eaed] shadow-2xl backdrop-blur-md md:inset-y-3 md:left-3 md:right-auto md:bottom-3 md:max-h-none md:w-[280px] md:rounded-2xl">
+        <header className="flex items-start justify-between gap-2 border-b border-white/10 px-3 py-3">
+          <div>
+            <div className="text-[11px] font-semibold tracking-[0.14em] text-[#7eb6f0]">CONTSYSTEM</div>
+            <h1 className="text-base font-semibold leading-tight">Stánek 05 · Hala 4C</h1>
+          </div>
+          <button type="button" onClick={() => setPanelOpen(false)} className="rounded px-2 py-1 text-xs text-[#d5dbe2] hover:bg-white/10">
+            Skrýt
+          </button>
         </header>
-
-        <div className="flex flex-wrap gap-1 border-b border-white/10 px-3 py-2">
-          <button type="button" data-on={mode === "translate"} onClick={() => setMode("translate")} className="rounded px-2.5 py-1 text-sm data-[on=true]:bg-[#1574d4]">
-            Posun
-          </button>
-          <button type="button" data-on={mode === "rotate"} onClick={() => setMode("rotate")} className="rounded px-2.5 py-1 text-sm data-[on=true]:bg-[#1574d4]">
-            Otáčení
-          </button>
-          <button type="button" data-on={snap} onClick={() => setSnap((v) => !v)} className="rounded px-2.5 py-1 text-sm data-[on=true]:bg-white/15">
-            Krok 5 cm
-          </button>
-          <button type="button" data-on={ghost} onClick={() => setGhost((v) => !v)} className="rounded px-2.5 py-1 text-sm data-[on=true]:bg-white/15">
+        <ul className="min-h-0 flex-1 overflow-auto px-2 py-2">
+          {items.map((item) => {
+            const active = item.id === selected;
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelected(item.id)}
+                  data-on={active}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-white/10 data-[on=true]:bg-[#1574d4]/35"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm">{item.name}</span>
+                  <span
+                    role="checkbox"
+                    aria-checked={!hidden[item.id]}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setHidden((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                    }}
+                    className="shrink-0 text-[11px] text-[#c5ccd3] hover:text-white"
+                  >
+                    {hidden[item.id] ? "zobrazit" : "skrýt"}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <footer className="flex flex-wrap gap-2 border-t border-white/10 px-3 py-2 text-xs">
+          <button type="button" data-on={ghost} onClick={() => setGhost((v) => !v)} className="rounded px-2 py-1 hover:bg-white/10 data-[on=true]:bg-white/15">
             Obálka
           </button>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-auto px-3 py-2">
-          <ul className="flex flex-col gap-1">
-            {items.map((item) => {
-              const active = item.id === selected;
-              const over = footprintOutside(item);
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelected(item.id)}
-                    data-on={active}
-                    className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left data-[on=true]:bg-white/10 hover:bg-white/5"
-                  >
-                    <span className="mt-0.5 inline-flex size-2 shrink-0 rounded-full bg-[#1574d4] data-[over=true]:bg-[#e0a23a]" data-over={over} />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{item.name}</span>
-                      <span className="block truncate text-xs text-[#9aa6b2]">{item.detail}</span>
-                    </span>
-                    <span
-                      role="checkbox"
-                      aria-checked={!hidden[item.id]}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setHidden((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
-                      }}
-                      className="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[11px] text-[#9aa6b2] hover:bg-white/10"
-                    >
-                      {hidden[item.id] ? "zobrazit" : "skrýt"}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-
-          {current && (
-            <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-3">
-              <div className="text-sm font-medium">{current.name}</div>
-              <p className="mt-1 text-xs leading-5 text-[#9aa6b2]">
-                X je podél 10 m zleva doprava, Z od vstupu do haly 7 (0) směrem do uličky (5). Otočení 0° míří do uličky.
-              </p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <label className="text-xs text-[#9aa6b2]">
-                  X m
-                  <input
-                    className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 font-mono text-sm text-white"
-                    type="number"
-                    step={0.05}
-                    value={current.x}
-                    onChange={(event) => commit(current.id, round2(Number(event.target.value)), current.z, current.rot)}
-                  />
-                </label>
-                <label className="text-xs text-[#9aa6b2]">
-                  Z m
-                  <input
-                    className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 font-mono text-sm text-white"
-                    type="number"
-                    step={0.05}
-                    value={current.z}
-                    onChange={(event) => commit(current.id, current.x, round2(Number(event.target.value)), current.rot)}
-                  />
-                </label>
-                <label className="text-xs text-[#9aa6b2]">
-                  °
-                  <input
-                    className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 font-mono text-sm text-white"
-                    type="number"
-                    step={5}
-                    value={current.rot}
-                    onChange={(event) => commit(current.id, current.x, current.z, normDeg(Number(event.target.value)))}
-                  />
-                </label>
-              </div>
-              {outside && (
-                <p className="mt-2 text-xs text-[#e0a23a]">Půdorys přesahuje plochu 5 × 10 m. V náčrtu Goupil a Foton mírně vyčnívají.</p>
-              )}
-              {machines[current.id] && (
-                <div className="mt-3 flex flex-col gap-2">
-                  <label className="text-xs text-[#9aa6b2]">
-                    Podpěry {Math.round(machines[current.id].legs * 100)} %
-                    <input
-                      className="mt-1 w-full accent-[#f0b429]"
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={Math.round(machines[current.id].legs * 100)}
-                      onChange={(event) => {
-                        const legs = Number(event.target.value) / 100;
-                        setMachines((prev) => ({ ...prev, [current.id]: { ...prev[current.id], legs } }));
-                      }}
-                    />
-                  </label>
-                  <label className="text-xs text-[#9aa6b2]">
-                    Plošina {Math.round(machines[current.id].lift * 100)} %
-                    <input
-                      className="mt-1 w-full accent-[#2f9a45]"
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={Math.round(machines[current.id].lift * 100)}
-                      onChange={(event) => {
-                        const lift = Number(event.target.value) / 100;
-                        setMachines((prev) => ({ ...prev, [current.id]: { ...prev[current.id], lift } }));
-                      }}
-                    />
-                  </label>
-                  <p className="text-[11px] leading-4 text-[#9aa6b2]">
-                    0 % podpěr je u karoserie, 100 % je šířka z výkresu. Plošina na 0 % je složená. U Rangeru 100 % zvedne koš zhruba do 14 m, nad střechu haly.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button type="button" onClick={() => setShowBrief((v) => !v)} className="mt-3 text-sm text-[#7eb6f0]">
-            {showBrief ? "Skrýt zadání" : "Ukázat náčrt ze zadání"}
+          <button
+            type="button"
+            className="rounded px-2 py-1 hover:bg-white/10"
+            onClick={() => {
+              setItems(DEFAULT_LAYOUT);
+              setHidden({});
+              setMachines({ goupil: { ...DEFAULT_MACHINE }, foton: { ...DEFAULT_MACHINE } });
+              setSelected("goupil");
+            }}
+          >
+            Obnovit
           </button>
-          {showBrief && (
-            <div className="relative mt-2 aspect-[3/4] w-full overflow-hidden rounded-lg border border-white/10 bg-white">
-              <Image
-                src="/ref/zadani.png"
-                alt="Náčrt rozmístění exponátů na ploše 5 × 10 m"
-                fill
-                sizes="360px"
-                className="object-contain"
-              />
-            </div>
-          )}
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="relative h-24 overflow-hidden rounded-lg bg-white">
-              <Image src="/ref/goupil.png" alt="Goupil G6 s plošinou COMET" fill sizes="160px" className="object-contain" />
-            </div>
-            <div className="relative h-24 overflow-hidden rounded-lg bg-white">
-              <Image src="/ref/foton.png" alt="Ford Ranger s plošinou COMET X4-14" fill sizes="160px" className="object-contain" />
-            </div>
-          </div>
-        </div>
-
-        <footer className="flex flex-col gap-2 border-t border-white/10 px-3 py-2 text-xs text-[#9aa6b2]">
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded border border-white/15 px-2 py-1 text-[#e8eaed] hover:bg-white/10"
-              onClick={() => {
-                setItems(DEFAULT_LAYOUT);
-                setHidden({});
-                setMachines({ goupil: { ...DEFAULT_MACHINE }, foton: { ...DEFAULT_MACHINE } });
-                setSelected("goupil");
-              }}
-            >
-              Obnovit zadání
-            </button>
-            <button type="button" className="rounded border border-white/15 px-2 py-1 text-[#e8eaed] hover:bg-white/10" onClick={exportJson}>
-              Export JSON
-            </button>
-            <a
-              className="rounded border border-white/15 px-2 py-1 text-[#e8eaed] hover:bg-white/10"
-              href="https://my.matterport.com/show/?m=MTeqx1io6Kr"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Matterport haly
-            </a>
-          </div>
-          <p>Tažení prázdného místa otáčí pohled. Šipky posouvají výběr, Q a E otáčí, Shift je hrubší krok. G posun, R otáčení, 1–3 kamery.</p>
+          <button type="button" className="rounded px-2 py-1 hover:bg-white/10" onClick={exportJson}>
+            Export
+          </button>
+          <a className="rounded px-2 py-1 hover:bg-white/10" href="https://my.matterport.com/show/?m=MTeqx1io6Kr" target="_blank" rel="noreferrer">
+            Hala
+          </a>
         </footer>
       </aside>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPanelOpen(true)}
+          className="absolute left-3 top-3 z-20 rounded-full border border-white/20 bg-[#12151a]/45 px-3 py-1.5 text-sm text-white shadow-lg backdrop-blur-md hover:bg-[#12151a]/60"
+        >
+          Seznam
+        </button>
+      )}
     </div>
   );
 }
