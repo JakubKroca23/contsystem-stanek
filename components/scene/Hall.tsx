@@ -3,17 +3,17 @@
 import { useMemo } from "react";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { BOOTH_D, BOOTH_W } from "@/lib/layout";
+import { BOOTH_D, BOOTH_W, CORNER_X, DOOR_H, DOOR_W, DOOR_X } from "@/lib/layout";
 import { canvasTexture, mat } from "./materials";
 
 function Column({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <mesh position={[0, 5.2, 0]} material={mat.steel} castShadow receiveShadow>
-        <boxGeometry args={[0.28, 10.4, 0.18]} />
+      <mesh position={[0, 4.6, 0]} material={mat.steel} castShadow receiveShadow>
+        <boxGeometry args={[0.28, 9.2, 0.18]} />
       </mesh>
-      <mesh position={[0, 5.2, 0]} material={mat.steel}>
-        <boxGeometry args={[0.12, 10.4, 0.42]} />
+      <mesh position={[0, 4.6, 0]} material={mat.steel}>
+        <boxGeometry args={[0.12, 9.2, 0.42]} />
       </mesh>
       <mesh position={[0, 0.08, 0]} material={mat.steel} receiveShadow>
         <boxGeometry args={[0.7, 0.08, 0.7]} />
@@ -105,84 +105,99 @@ export function Hall() {
   );
 
   const wallZ = -3.4;
-  const columns = [-14, -2, 12, 24];
+  const wallCenter = 12;
+  const wallW = 42;
+  const hallH = 9.2;
+  const columns = [CORNER_X, 6.2, DOOR_X + 3.6, 24];
+  const leaf = DOOR_W / 2;
 
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, -0.02, 8]} receiveShadow material={floorMat}>
-        <planeGeometry args={[52, 36]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[wallCenter, -0.02, 8]} receiveShadow material={floorMat}>
+        <planeGeometry args={[wallW + 8, 36]} />
       </mesh>
 
-      <mesh position={[5, 0.01, wallZ + 0.55]} rotation={[-Math.PI / 2, 0, 0]} material={mat.terra} receiveShadow>
-        <planeGeometry args={[48, 1.1]} />
+      <mesh position={[wallCenter, 0.01, wallZ + 0.55]} rotation={[-Math.PI / 2, 0, 0]} material={mat.terra} receiveShadow>
+        <planeGeometry args={[wallW, 1.1]} />
       </mesh>
 
-      <mesh position={[5, 3.3, wallZ]} material={ribMat} receiveShadow>
-        <boxGeometry args={[48, 6.4, 0.18]} />
+      <mesh position={[wallCenter, 3.9, wallZ]} material={ribMat} receiveShadow>
+        <boxGeometry args={[wallW, 7.4, 0.18]} />
       </mesh>
-      <mesh position={[5, 8.15, wallZ]} material={mat.wallLite} receiveShadow>
-        <boxGeometry args={[48, 3.3, 0.16]} />
+      <mesh position={[wallCenter, 8.4, wallZ]} material={mat.wallLite} receiveShadow>
+        <boxGeometry args={[wallW, 1.6, 0.16]} />
       </mesh>
-      <mesh position={[5, 6.55, wallZ + 0.08]} material={mat.steel}>
-        <boxGeometry args={[48, 0.12, 0.12]} />
+      <mesh position={[wallCenter, 6.2, wallZ + 0.08]} material={mat.steel}>
+        <boxGeometry args={[wallW, 0.1, 0.1]} />
       </mesh>
-      <mesh position={[5, 0.12, wallZ + 0.08]} material={mat.whiteDark} receiveShadow>
-        <boxGeometry args={[48, 0.24, 0.12]} />
+      <mesh position={[wallCenter, 0.1, wallZ + 0.08]} material={mat.whiteDark} receiveShadow>
+        <boxGeometry args={[wallW, 0.2, 0.12]} />
       </mesh>
 
-      <mesh position={[5, 9.15, wallZ + 0.28]} material={mat.steel}>
-        <boxGeometry args={[46, 0.18, 0.42]} />
-      </mesh>
-      <mesh position={[5, 8.7, wallZ + 0.55]} material={mat.steel}>
-        <boxGeometry args={[46, 0.08, 0.28]} />
+      <mesh position={[wallCenter, hallH - 0.15, wallZ + 0.28]} material={mat.steel}>
+        <boxGeometry args={[wallW - 1, 0.16, 0.36]} />
       </mesh>
 
       {columns.map((x) => (
         <Column key={x} position={[x, 0, wallZ + 0.35]} />
       ))}
 
-      <group position={[5, 0, wallZ + 0.16]}>
-        {[-1.15, 1.15].map((cx) =>
-          [-0.48, 0.48].map((dx) => (
-            <group key={`${cx}-${dx}`} position={[cx + dx, 1.12, 0]}>
-              <mesh material={mat.door} castShadow receiveShadow>
-                <boxGeometry args={[0.9, 2.2, 0.06]} />
-              </mesh>
-              <mesh position={[0, 0.42, 0.04]} material={mat.glassLite}>
-                <boxGeometry args={[0.62, 0.7, 0.02]} />
-              </mesh>
-              <mesh position={[dx > 0 ? -0.32 : 0.32, 0, 0.05]} material={mat.chrome}>
-                <boxGeometry args={[0.08, 0.04, 0.03]} />
-              </mesh>
-            </group>
-          )),
-        )}
+      <mesh position={[CORNER_X, hallH / 2, 2.4]} material={ribMat} receiveShadow>
+        <boxGeometry args={[0.18, hallH, 12.2]} />
+      </mesh>
+      <mesh position={[CORNER_X + 0.2, 0.1, 2.4]} material={mat.whiteDark}>
+        <boxGeometry args={[0.12, 0.2, 12.2]} />
+      </mesh>
+
+      <mesh position={[DOOR_X, DOOR_H / 2, wallZ + 0.12]} material={mat.blackSoft}>
+        <boxGeometry args={[DOOR_W - 0.02, DOOR_H - 0.02, 0.12]} />
+      </mesh>
+      <group position={[DOOR_X, 0, wallZ + 0.22]}>
+        {[-leaf / 2, leaf / 2].map((x) => (
+          <group key={x} position={[x, DOOR_H / 2, 0]}>
+            <mesh material={mat.door} castShadow receiveShadow>
+              <boxGeometry args={[leaf - 0.02, DOOR_H, 0.05]} />
+            </mesh>
+            <mesh position={[0, 0.28, 0.035]} material={mat.glassLite}>
+              <boxGeometry args={[leaf - 0.22, 0.85, 0.02]} />
+            </mesh>
+            <mesh position={[x > 0 ? -0.28 : 0.28, -0.05, 0.04]} material={mat.chrome}>
+              <boxGeometry args={[0.08, 0.035, 0.03]} />
+            </mesh>
+          </group>
+        ))}
+        <mesh position={[0, DOOR_H + 0.05, 0]} material={mat.steel}>
+          <boxGeometry args={[DOOR_W + 0.18, 0.1, 0.08]} />
+        </mesh>
+        <mesh position={[-(DOOR_W / 2 + 0.04), DOOR_H / 2, 0]} material={mat.steel}>
+          <boxGeometry args={[0.08, DOOR_H, 0.08]} />
+        </mesh>
+        <mesh position={[DOOR_W / 2 + 0.04, DOOR_H / 2, 0]} material={mat.steel}>
+          <boxGeometry args={[0.08, DOOR_H, 0.08]} />
+        </mesh>
       </group>
 
-      <mesh position={[5, 3.55, wallZ + 0.2]}>
-        <planeGeometry args={[2.7, 1.12]} />
+      <mesh position={[DOOR_X, DOOR_H + 0.72, wallZ + 0.2]}>
+        <planeGeometry args={[2.15, 0.88]} />
         <meshStandardMaterial map={sign} roughness={0.55} />
       </mesh>
 
-      {[-3.4, 3.4].map((x) => (
-        <mesh key={x} position={[5 + x, 1.15, wallZ + 0.28]} material={mat.red} castShadow>
-          <boxGeometry args={[0.48, 0.7, 0.22]} />
+      {[DOOR_X - 1.7, DOOR_X + 1.7].map((x) => (
+        <mesh key={x} position={[x, 1.15, wallZ + 0.28]} material={mat.red} castShadow>
+          <boxGeometry args={[0.55, 0.78, 0.22]} />
         </mesh>
       ))}
 
-      <mesh position={[-16, 5.5, 8]} material={mat.wall} receiveShadow>
-        <boxGeometry args={[0.2, 11, 28]} />
+      <mesh position={[30, hallH / 2, 8]} material={mat.wall} receiveShadow>
+        <boxGeometry args={[0.2, hallH, 24]} />
       </mesh>
-      <mesh position={[26, 5.5, 8]} material={mat.wall} receiveShadow>
-        <boxGeometry args={[0.2, 11, 28]} />
-      </mesh>
-      {[-4, 5, 14].map((x) => (
-        <mesh key={x} position={[x, 10.7, 4]} material={mat.white}>
-          <boxGeometry args={[3.2, 0.08, 0.35]} />
+      {[2, 10, 18].map((x) => (
+        <mesh key={x} position={[x, hallH - 0.35, 3.5]} material={mat.white}>
+          <boxGeometry args={[2.4, 0.08, 0.28]} />
         </mesh>
       ))}
 
-      <Html position={[BOOTH_W / 2, 0.15, -0.7]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
+      <Html position={[DOOR_X, 0.15, -0.85]} center transform sprite distanceFactor={8} zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>
         <div className="whitespace-nowrap rounded bg-white/90 px-2 py-1 text-[12px] font-semibold tracking-wide text-[#c4161c] shadow">
           ↑ VSTUP DO HALY 7
         </div>

@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   DEFAULT_LAYOUT,
+  DEFAULT_MACHINE,
   STORAGE_KEY,
   footprintOutside,
   isExhibit,
   normDeg,
   round2,
   type Exhibit,
+  type MachinePose,
 } from "@/lib/layout";
 import { CanvasScene, type GizmoMode, type ViewId } from "./scene/CanvasScene";
 
@@ -40,6 +42,10 @@ export default function BoothApp() {
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
   const [view, setView] = useState<ViewId>("perspective");
   const [showBrief, setShowBrief] = useState(false);
+  const [machines, setMachines] = useState<Record<string, MachinePose>>({
+    goupil: { ...DEFAULT_MACHINE },
+    foton: { ...DEFAULT_MACHINE },
+  });
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -133,6 +139,7 @@ export default function BoothApp() {
       <div className="absolute inset-0">
         <CanvasScene
           items={items}
+          machines={machines}
           hidden={hidden}
           selected={selected}
           mode={mode}
@@ -165,7 +172,7 @@ export default function BoothApp() {
           <div className="text-[11px] font-semibold tracking-[0.16em] text-[#7eb6f0]">CONTSYSTEM GROUP</div>
           <h1 className="mt-1 text-lg font-semibold leading-tight">Stánek 05 · Hala 4C</h1>
           <p className="mt-1 text-sm text-[#b7c0cb]">
-            Plocha 5 × 10 m před vstupem do haly 7. Rozměry strojů jsou z výkresů, rozmístění z náčrtu. Objekty jdou posouvat a otáčet.
+            Plocha 5 × 10 m je vlevo od dveří haly 7, u rohu. Dveře mají 2,10 × 1,80 m. Goupil je vysoký 2,38 m, složený Ranger 2,80 m.
           </p>
         </header>
 
@@ -260,6 +267,41 @@ export default function BoothApp() {
               {outside && (
                 <p className="mt-2 text-xs text-[#e0a23a]">Půdorys přesahuje plochu 5 × 10 m. V náčrtu Goupil a Foton mírně vyčnívají.</p>
               )}
+              {machines[current.id] && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <label className="text-xs text-[#9aa6b2]">
+                    Podpěry {Math.round(machines[current.id].legs * 100)} %
+                    <input
+                      className="mt-1 w-full accent-[#f0b429]"
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(machines[current.id].legs * 100)}
+                      onChange={(event) => {
+                        const legs = Number(event.target.value) / 100;
+                        setMachines((prev) => ({ ...prev, [current.id]: { ...prev[current.id], legs } }));
+                      }}
+                    />
+                  </label>
+                  <label className="text-xs text-[#9aa6b2]">
+                    Plošina {Math.round(machines[current.id].lift * 100)} %
+                    <input
+                      className="mt-1 w-full accent-[#2f9a45]"
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(machines[current.id].lift * 100)}
+                      onChange={(event) => {
+                        const lift = Number(event.target.value) / 100;
+                        setMachines((prev) => ({ ...prev, [current.id]: { ...prev[current.id], lift } }));
+                      }}
+                    />
+                  </label>
+                  <p className="text-[11px] leading-4 text-[#9aa6b2]">
+                    0 % podpěr je u karoserie, 100 % je šířka z výkresu. Plošina na 0 % je složená. U Rangeru 100 % zvedne koš zhruba do 14 m, nad střechu haly.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -295,6 +337,7 @@ export default function BoothApp() {
               onClick={() => {
                 setItems(DEFAULT_LAYOUT);
                 setHidden({});
+                setMachines({ goupil: { ...DEFAULT_MACHINE }, foton: { ...DEFAULT_MACHINE } });
                 setSelected("goupil");
               }}
             >

@@ -36,29 +36,32 @@ export function Outriggers({
   reach,
   bodyHalf,
   beamY,
+  extension,
 }: {
   zs: number[];
   reach: number;
   bodyHalf: number;
   beamY: number;
+  /** 0 = zasunuté u karoserie, 1 = šířka z výkresu. */
+  extension: number;
 }) {
-  const beam = reach - bodyHalf;
+  const span = bodyHalf + 0.06 + (reach - bodyHalf - 0.06) * extension;
+  const beam = Math.max(0.08, span - bodyHalf);
   return (
     <group>
       {zs.map((z) =>
         [-1, 1].map((side) => (
           <group key={`${z}-${side}`} position={[0, beamY, z]}>
-            <mesh
-              position={[side * (bodyHalf + beam / 2), 0, 0]}
-              material={mat.yellow}
-              castShadow
-            >
+            <mesh position={[side * (bodyHalf + beam / 2), 0, 0]} material={mat.yellow} castShadow>
               <boxGeometry args={[beam, 0.07, 0.09]} />
             </mesh>
-            <mesh position={[side * reach, -(beamY - 0.06) / 2, 0]} material={mat.black} castShadow>
+            <mesh position={[side * (bodyHalf - 0.02), 0.05, 0]} material={mat.blackSoft} castShadow>
+              <boxGeometry args={[0.16, 0.1, 0.14]} />
+            </mesh>
+            <mesh position={[side * span, -(beamY - 0.06) / 2, 0]} material={mat.black} castShadow>
               <boxGeometry args={[0.07, beamY - 0.06, 0.07]} />
             </mesh>
-            <mesh position={[side * reach, -beamY + 0.025, 0]} material={mat.foot} receiveShadow>
+            <mesh position={[side * span, -beamY + 0.025, 0]} material={mat.foot} receiveShadow>
               <boxGeometry args={[0.24, 0.04, 0.22]} />
             </mesh>
           </group>

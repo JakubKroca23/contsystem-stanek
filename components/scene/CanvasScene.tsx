@@ -6,10 +6,10 @@ import { ContactShadows, OrbitControls, TransformControls } from "@react-three/d
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import {
-  BOOTH_D,
-  BOOTH_W,
+  DEFAULT_MACHINE,
   PLAN_GHOSTS,
   type Exhibit,
+  type MachinePose,
   normDeg,
   round2,
 } from "@/lib/layout";
@@ -21,12 +21,12 @@ import { BoothPad, Hall } from "./Hall";
 export type ViewId = "perspective" | "top" | "entrance";
 export type GizmoMode = "translate" | "rotate";
 
-function Model({ kind }: { kind: Exhibit["kind"] }) {
+function Model({ kind, pose }: { kind: Exhibit["kind"]; pose: MachinePose }) {
   switch (kind) {
     case "goupil":
-      return <Goupil />;
+      return <Goupil pose={pose} />;
     case "foton":
-      return <Foton />;
+      return <Foton pose={pose} />;
     case "table":
       return <RoundTable />;
     case "chair":
@@ -57,14 +57,14 @@ function CameraRig({ view }: { view: ViewId }) {
     if (!orbit) return;
     camera.up.set(0, 1, 0);
     if (view === "top") {
-      orbit.target.set(BOOTH_W / 2, 0, BOOTH_D / 2);
-      camera.position.set(BOOTH_W / 2, 17, BOOTH_D / 2 + 2.6);
+      orbit.target.set(6.2, 0, 1.6);
+      camera.position.set(6.2, 24, 1.6 + 4.2);
     } else if (view === "entrance") {
-      orbit.target.set(BOOTH_W / 2, 1.15, 2.6);
-      camera.position.set(BOOTH_W / 2, 1.7, -1.4);
+      orbit.target.set(5.2, 1.4, 1.8);
+      camera.position.set(16.2, 3.3, 5.4);
     } else {
-      orbit.target.set(5, 1.1, 2.2);
-      camera.position.set(8.4, 3.15, 13.4);
+      orbit.target.set(5.4, 1.25, 2.2);
+      camera.position.set(7.6, 4.6, 15.8);
     }
     orbit.update();
   }, [view, get, controlsReady]);
@@ -74,6 +74,7 @@ function CameraRig({ view }: { view: ViewId }) {
 
 function ExhibitNode({
   item,
+  pose,
   selected,
   mode,
   snap,
@@ -81,6 +82,7 @@ function ExhibitNode({
   onCommit,
 }: {
   item: Exhibit;
+  pose: MachinePose;
   selected: boolean;
   mode: GizmoMode;
   snap: boolean;
@@ -116,7 +118,7 @@ function ExhibitNode({
           onSelect(item.id);
         }}
       >
-        <Model kind={item.kind} />
+        <Model kind={item.kind} pose={pose} />
         {selected && <FootprintLines w={item.w} d={item.d} color="#1574d4" />}
       </group>
       {selected && (
@@ -170,6 +172,7 @@ function Ghosts() {
 
 function SceneBody({
   items,
+  machines,
   hidden,
   selected,
   mode,
@@ -180,6 +183,7 @@ function SceneBody({
   onCommit,
 }: {
   items: Exhibit[];
+  machines: Record<string, MachinePose>;
   hidden: Record<string, boolean>;
   selected: string | null;
   mode: GizmoMode;
@@ -222,6 +226,7 @@ function SceneBody({
           <ExhibitNode
             key={item.id}
             item={item}
+            pose={machines[item.id] ?? DEFAULT_MACHINE}
             selected={selected === item.id}
             mode={mode}
             snap={snap}
@@ -246,7 +251,7 @@ function SceneBody({
         maxPolarAngle={Math.PI / 2 - 0.04}
         minDistance={1.6}
         maxDistance={40}
-        target={[5, 1.1, 2.2]}
+        target={[5.4, 1.25, 2.2]}
       />
       <CameraRig view={view} />
     </>
@@ -255,6 +260,7 @@ function SceneBody({
 
 export function CanvasScene(props: {
   items: Exhibit[];
+  machines: Record<string, MachinePose>;
   hidden: Record<string, boolean>;
   selected: string | null;
   mode: GizmoMode;
@@ -268,7 +274,7 @@ export function CanvasScene(props: {
     <Canvas
       shadows
       dpr={[1, 1.75]}
-      camera={{ position: [8.4, 3.15, 13.4], fov: 40, near: 0.1, far: 80 }}
+      camera={{ position: [7.6, 4.6, 15.8], fov: 38, near: 0.1, far: 120 }}
       gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
       >
       <Suspense fallback={null}>

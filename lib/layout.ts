@@ -27,6 +27,13 @@ export type Exhibit = {
 
 export const BOOTH_W = 10;
 export const BOOTH_D = 5;
+
+/** Dveře HALA 7: jedno dvoukřídlé křídlo, světlost 1,80 × 2,10 m. Stánek je vlevo od nich. */
+export const DOOR_X = 13;
+export const DOOR_W = 1.8;
+export const DOOR_H = 2.1;
+/** Vnitřní roh haly vlevo od stánku. */
+export const CORNER_X = -2.6;
 export const STORAGE_KEY = "contsystem-stanek-05-v1";
 
 /**
@@ -216,6 +223,15 @@ export function footprintOutside(item: Pick<Exhibit, "x" | "z" | "rot" | "w" | "
     return wx < -0.04 || wx > BOOTH_W + 0.04 || wz < -0.04 || wz > BOOTH_D + 0.04;
   });
 }
+
+export type MachinePose = {
+  /** 0 složená přepravní poloha, 1 plně zvednutá plošina. */
+  lift: number;
+  /** 0 podpěry u karoserie, 1 rozteč z výkresu. */
+  legs: number;
+};
+
+export const DEFAULT_MACHINE: MachinePose = { lift: 0, legs: 1 };
 
 export function isExhibit(value: unknown): value is Exhibit {
   if (!value || typeof value !== "object") return false;
