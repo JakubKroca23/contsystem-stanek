@@ -7,7 +7,8 @@ export type ExhibitKind =
   | "stool"
   | "flag-cs"
   | "flag-comet"
-  | "figure";
+  | "figure"
+  | "pallet-forks";
 
 export type Exhibit = {
   id: string;
@@ -173,6 +174,18 @@ export const DEFAULT_LAYOUT: Exhibit[] = [
     w: 0.38,
     d: 0.38,
     h: 1.02,
+  },
+  {
+    id: "pallet-forks",
+    kind: "pallet-forks",
+    name: "Europaleta + vidle Vally",
+    detail: "paleta 1200 × 800 mm, vidle VALLY 2000-600",
+    x: 9.5,
+    z: 1.15,
+    rot: 0,
+    w: 0.8,
+    d: 1.9,
+    h: 1.78,
   },
   {
     id: "figure",

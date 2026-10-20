@@ -16,6 +16,7 @@ import {
 import { FootprintLines } from "./primitives";
 import { Foton, Goupil } from "./vehicles";
 import { BarStool, Counter, Figure, FlagComet, FlagContsystem, MetalChair, RoundTable } from "./furniture";
+import { PalletForks } from "./pallet";
 import { BoothPad, Hall } from "./Hall";
 
 export type GizmoMode = "translate" | "rotate";
@@ -40,6 +41,8 @@ function Model({ kind, pose }: { kind: Exhibit["kind"]; pose: MachinePose }) {
       return <FlagComet />;
     case "figure":
       return <Figure />;
+    case "pallet-forks":
+      return <PalletForks />;
     default:
       return null;
   }
