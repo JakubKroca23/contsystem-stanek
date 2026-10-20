@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { useTexture } from "@react-three/drei";
+import { publicPath } from "@/lib/public-path";
 import { canvasTexture, mat } from "./materials";
 
 export function RoundTable() {
@@ -53,7 +54,7 @@ export function MetalChair() {
 }
 
 export function Counter() {
-  const logo = useTexture("/brand/contsystem-logo.png");
+  const logo = useTexture(publicPath("/brand/contsystem-logo.png"));
   return (
     <group>
       <mesh position={[0, 0.52, 0]} material={mat.whiteDark} castShadow receiveShadow>
@@ -202,7 +203,7 @@ function FeatherFlag({ map }: { map: THREE.Texture }) {
 }
 
 export function FlagContsystem() {
-  const logo = useTexture("/brand/contsystem-logo.png");
+  const logo = useTexture(publicPath("/brand/contsystem-logo.png"));
   const map = useMemo(
     () => canvasTexture(640, 1280, (ctx) => drawFeatherLogo(ctx, logo.image as CanvasImageSource, "#141416", true)),
     [logo],
@@ -211,7 +212,7 @@ export function FlagContsystem() {
 }
 
 export function FlagComet() {
-  const logo = useTexture("/brand/comet-logo.png");
+  const logo = useTexture(publicPath("/brand/comet-logo.png"));
   const map = useMemo(
     () => canvasTexture(640, 1280, (ctx) => drawFeatherLogo(ctx, logo.image as CanvasImageSource, "#f7f8fa", false)),
     [logo],

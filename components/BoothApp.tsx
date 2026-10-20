@@ -35,7 +35,6 @@ export default function BoothApp() {
   const [items, setItems] = useState<Exhibit[]>(loadLayout);
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<GizmoMode>("translate");
-  const snap = true;
   const [ghost, setGhost] = useState(true);
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
   const [panelOpen, setPanelOpen] = useState(true);
@@ -48,10 +47,6 @@ export default function BoothApp() {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
-
-  const commit = (id: string, x: number, z: number, rot: number) => {
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, x, z, rot } : item)));
-  };
 
   const nudge = (dx: number, dz: number, dRot: number) => {
     if (!selected) return;
@@ -143,11 +138,9 @@ export default function BoothApp() {
           selected={selected}
           hovered={hovered}
           mode={mode}
-          snap={snap}
           ghost={ghost}
           onSelect={setSelected}
           onHover={setHovered}
-          onCommit={commit}
           onMode={setMode}
           onNudge={nudge}
           onPose={setPose}

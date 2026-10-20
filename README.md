@@ -14,7 +14,8 @@ U vybraného stroje jdou vysouvat podpěry a zvedat plošina. U X4-14 je plné z
 
 ## Ovládání
 
-- Klik na objekt ho vybere a nad ním se ukáže posun, otáčení a u strojů i podpěry s plošinou. Najetí myší objekt zvýrazní.
+- Tažení myší jen otáčí pohled. Objekt se vybere až krátkým kliknutím. Najetí ho obkreslí bíle, výběr modře.
+- Nad vybraným objektem je jedno tlačítko. Klik přepíná **Posun** a **Otáčení**, tažení tlačítka objekt posune nebo otočí. U strojů jsou tam i podpěry a plošina.
 - Souřadnice: **X** 0–10 m zleva doprava, **Z** 0 u vstupu do haly 7 a 5 m směrem do uličky. **0°** míří do uličky.
 - Šipky posouvají výběr, **Q / E** otáčí, **Shift** je hrubší krok. **G** posun, **R** otáčení, **H** schová seznam. Seznam vlevo je průhledný a jde skrýt.
 - Bílá obálka je obrys z náčrtu. Rozmístění se ukládá v prohlížeči a jde exportovat do JSON.
@@ -28,3 +29,7 @@ npm run dev
 ```
 
 Vývojový server poslouchá na [http://127.0.0.1:43123](http://127.0.0.1:43123).
+
+## GitHub Pages
+
+Push na `main` spustí workflow `.github/workflows/pages.yml`. Ten sestaví statický export a publikuje ho na GitHub Pages. U projektového webu je adresa `https://<účet>.github.io/<repo>/`. V nastavení repozitáře je potřeba Pages zdroj **GitHub Actions**.

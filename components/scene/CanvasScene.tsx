@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useRef, type RefObject } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { ContactShadows, Html, OrbitControls, TransformControls } from "@react-three/drei";
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
+import { ContactShadows, Html, OrbitControls } from "@react-three/drei";
+import { EffectComposer, Outline } from "@react-three/postprocessing";
+import { KernelSize } from "postprocessing";
 import * as THREE from "three";
 import {
   DEFAULT_MACHINE,
@@ -11,8 +12,6 @@ import {
   footprintOutside,
   type Exhibit,
   type MachinePose,
-  normDeg,
-  round2,
 } from "@/lib/layout";
 import { FootprintLines } from "./primitives";
 import { Foton, Goupil } from "./vehicles";
@@ -46,19 +45,10 @@ function Model({ kind, pose }: { kind: Exhibit["kind"]; pose: MachinePose }) {
   }
 }
 
-function SelectionMark({ item, selected, hovered }: { item: Exhibit; selected: boolean; hovered: boolean }) {
-  if (!selected && !hovered) return null;
-  return (
-    <group>
-      <FootprintLines w={item.w + (selected ? 0.16 : 0.04)} d={item.d + (selected ? 0.16 : 0.04)} color={selected ? "#3aa0ff" : "#ffffff"} y={0.07} />
-      {selected && (
-        <mesh position={[0, item.h / 2, 0]}>
-          <boxGeometry args={[item.w + 0.08, item.h + 0.06, item.d + 0.08]} />
-          <meshBasicMaterial color="#3aa0ff" wireframe transparent opacity={0.9} />
-        </mesh>
-      )}
-    </group>
-  );
+const CLICK_PX = 6;
+
+function isClick(event: ThreeEvent<MouseEvent>) {
+  return event.delta <= CLICK_PX;
 }
 
 function ObjectHud({
@@ -77,42 +67,71 @@ function ObjectHud({
   onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
   const vehicle = item.kind === "goupil" || item.kind === "foton";
-  const btn = "rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20";
+  const camera = useThree((state) => state.camera);
+  const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const right = useRef(new THREE.Vector3());
+  const look = useRef(new THREE.Vector3());
+
+  const applyDrag = (dx: number, dy: number) => {
+    if (dx === 0 && dy === 0) return;
+    if (mode === "rotate") {
+      onNudge(0, 0, dx * 0.4);
+      return;
+    }
+    right.current.setFromMatrixColumn(camera.matrixWorld, 0);
+    right.current.y = 0;
+    if (right.current.lengthSq() < 1e-8) right.current.set(1, 0, 0);
+    right.current.normalize();
+    camera.getWorldDirection(look.current);
+    look.current.y = 0;
+    if (look.current.lengthSq() < 1e-8) look.current.set(0, 0, -1);
+    look.current.normalize();
+    const scale = 0.012;
+    onNudge(
+      right.current.x * dx * scale + look.current.x * -dy * scale,
+      right.current.z * dx * scale + look.current.z * -dy * scale,
+      0,
+    );
+  };
+
   return (
     <Html position={[0, item.h + 0.55, 0]} center zIndexRange={[40, 0]} style={{ pointerEvents: "auto" }}>
       <div
-        className="w-[228px] rounded-xl border border-white/25 bg-[#12151a]/70 p-2 text-white shadow-2xl backdrop-blur-md"
+        className="w-[220px] rounded-2xl border border-white/25 bg-[#12151a]/75 p-2.5 text-white shadow-2xl backdrop-blur-md"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <div className="truncate text-sm font-medium">{item.name}</div>
-        <div className="mt-2 flex gap-1">
-          <button type="button" data-on={mode === "translate"} onClick={() => onMode("translate")} className={`${btn} data-[on=true]:bg-[#1574d4]`}>
-            Posun
-          </button>
-          <button type="button" data-on={mode === "rotate"} onClick={() => onMode("rotate")} className={`${btn} data-[on=true]:bg-[#1574d4]`}>
-            Otáčení
-          </button>
-        </div>
-        <div className="mt-2 grid grid-cols-4 gap-1">
-          <button type="button" className={btn} onClick={() => onNudge(-0.1, 0, 0)}>
-            ←
-          </button>
-          <button type="button" className={btn} onClick={() => onNudge(0.1, 0, 0)}>
-            →
-          </button>
-          <button type="button" className={btn} onClick={() => onNudge(0, -0.1, 0)}>
-            ↑
-          </button>
-          <button type="button" className={btn} onClick={() => onNudge(0, 0.1, 0)}>
-            ↓
-          </button>
-          <button type="button" className={`${btn} col-span-2`} onClick={() => onNudge(0, 0, -15)}>
-            ↺ 15°
-          </button>
-          <button type="button" className={`${btn} col-span-2`} onClick={() => onNudge(0, 0, 15)}>
-            15° ↻
-          </button>
-        </div>
+        <div className="truncate px-1 text-sm font-medium">{item.name}</div>
+        <button
+          type="button"
+          className="mt-2 flex w-full cursor-grab items-center justify-between gap-3 rounded-full bg-[#1574d4] px-3 py-2.5 text-left text-sm font-medium shadow-lg active:cursor-grabbing"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            drag.current = { x: event.clientX, y: event.clientY, moved: false };
+          }}
+          onPointerMove={(event) => {
+            const state = drag.current;
+            if (!state) return;
+            const dx = event.clientX - state.x;
+            const dy = event.clientY - state.y;
+            if (!state.moved && Math.hypot(dx, dy) < 4) return;
+            state.moved = true;
+            state.x = event.clientX;
+            state.y = event.clientY;
+            applyDrag(dx, dy);
+          }}
+          onPointerUp={(event) => {
+            const moved = drag.current?.moved ?? false;
+            drag.current = null;
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+            if (!moved) onMode(mode === "translate" ? "rotate" : "translate");
+          }}
+        >
+          <span>{mode === "translate" ? "Posun" : "Otáčení"}</span>
+          <span className="text-[11px] font-normal text-white/80">táhni · klik přepne</span>
+        </button>
         {vehicle && pose && (
           <div className="mt-2 flex flex-col gap-1 border-t border-white/15 pt-2">
             <label className="text-[11px] text-[#d5dbe2]">
@@ -149,12 +168,10 @@ function ExhibitNode({
   item,
   pose,
   selected,
-  hovered,
   mode,
-  snap,
   onSelect,
   onHover,
-  onCommit,
+  onBind,
   onMode,
   onNudge,
   onPose,
@@ -162,85 +179,48 @@ function ExhibitNode({
   item: Exhibit;
   pose: MachinePose;
   selected: boolean;
-  hovered: boolean;
   mode: GizmoMode;
-  snap: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
-  onCommit: (id: string, x: number, z: number, rot: number) => void;
+  onBind: (id: string, object: THREE.Object3D | null) => void;
   onMode: (mode: GizmoMode) => void;
   onNudge: (dx: number, dz: number, dRot: number) => void;
   onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
-  const dragging = useRef(false);
-  const get = useThree((s) => s.get);
-
-  const lockAxes = () => {
-    const obj = groupRef.current;
-    if (!obj) return null;
-    obj.position.y = 0;
-    obj.rotation.x = 0;
-    obj.rotation.z = 0;
-    return obj;
-  };
-
-  const setOrbit = (enabled: boolean) => {
-    const controls = get().controls as OrbitControlsImpl | null;
-    if (controls) controls.enabled = enabled;
-  };
+  const onBindRef = useRef(onBind);
+  useEffect(() => {
+    onBindRef.current = onBind;
+  });
+  useEffect(() => {
+    onBindRef.current(item.id, groupRef.current);
+    return () => onBindRef.current(item.id, null);
+  }, [item.id]);
 
   return (
-    <>
-      <group
-        ref={groupRef}
-        position={[item.x, 0, item.z]}
-        rotation={[0, (item.rot * Math.PI) / 180, 0]}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect(item.id);
-        }}
-        onPointerOver={(event) => {
-          event.stopPropagation();
-          onHover(item.id);
-        }}
-        onPointerOut={(event) => {
-          event.stopPropagation();
-          onHover(null);
-        }}
-      >
-        <Model kind={item.kind} pose={pose} />
-        <SelectionMark item={item} selected={selected} hovered={hovered} />
-        {selected && (
-          <ObjectHud item={item} mode={mode} pose={pose} onMode={onMode} onNudge={onNudge} onPose={onPose} />
-        )}
-      </group>
-      {selected && (
-        <TransformControls
-          object={groupRef as RefObject<THREE.Object3D>}
-          mode={mode}
-          space="world"
-          size={1.15}
-          translationSnap={snap ? 0.05 : null}
-          rotationSnap={snap ? THREE.MathUtils.degToRad(5) : null}
-          showX={mode === "translate"}
-          showY={mode === "rotate"}
-          showZ={mode === "translate"}
-          onMouseDown={() => {
-            dragging.current = true;
-            setOrbit(false);
-          }}
-          onObjectChange={lockAxes}
-          onMouseUp={() => {
-            dragging.current = false;
-            setOrbit(true);
-            const obj = lockAxes();
-            if (!obj) return;
-            onCommit(item.id, round2(obj.position.x), round2(obj.position.z), normDeg((obj.rotation.y * 180) / Math.PI));
-          }}
-        />
-      )}
-    </>
+    <group
+      ref={groupRef}
+      position={[item.x, 0, item.z]}
+      rotation={[0, (item.rot * Math.PI) / 180, 0]}
+      onClick={(event) => {
+        event.stopPropagation();
+        if (!isClick(event)) return;
+        onSelect(item.id);
+      }}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        onHover(item.id);
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={(event) => {
+        event.stopPropagation();
+        onHover(null);
+        document.body.style.cursor = "";
+      }}
+    >
+      <Model kind={item.kind} pose={pose} />
+      {selected && <ObjectHud item={item} mode={mode} pose={pose} onMode={onMode} onNudge={onNudge} onPose={onPose} />}
+    </group>
   );
 }
 
@@ -271,11 +251,9 @@ function SceneBody({
   selected,
   hovered,
   mode,
-  snap,
   ghost,
   onSelect,
   onHover,
-  onCommit,
   onMode,
   onNudge,
   onPose,
@@ -286,15 +264,29 @@ function SceneBody({
   selected: string | null;
   hovered: string | null;
   mode: GizmoMode;
-  snap: boolean;
   ghost: boolean;
   onSelect: (id: string | null) => void;
   onHover: (id: string | null) => void;
-  onCommit: (id: string, x: number, z: number, rot: number) => void;
   onMode: (mode: GizmoMode) => void;
   onNudge: (dx: number, dz: number, dRot: number) => void;
   onPose: (id: string, patch: Partial<MachinePose>) => void;
 }) {
+  const [nodes, setNodes] = useState<Record<string, THREE.Object3D>>({});
+  const bind = (id: string, object: THREE.Object3D | null) => {
+    setNodes((prev) => {
+      if (object && prev[id] === object) return prev;
+      if (!object && !(id in prev)) return prev;
+      const next = { ...prev };
+      if (object) next[id] = object;
+      else delete next[id];
+      return next;
+    });
+  };
+  const selectedObj = selected ? nodes[selected] : undefined;
+  const hoverObj = hovered && hovered !== selected ? nodes[hovered] : undefined;
+  const selectedList = useMemo(() => (selectedObj ? [selectedObj] : []), [selectedObj]);
+  const hoverList = useMemo(() => (hoverObj ? [hoverObj] : []), [hoverObj]);
+
   return (
     <>
       <color attach="background" args={["#d5dbe2"]} />
@@ -330,12 +322,10 @@ function SceneBody({
             item={item}
             pose={machines[item.id] ?? DEFAULT_MACHINE}
             selected={selected === item.id}
-            hovered={hovered === item.id}
             mode={mode}
-            snap={snap}
             onSelect={onSelect}
             onHover={onHover}
-            onCommit={onCommit}
+            onBind={bind}
             onMode={onMode}
             onNudge={onNudge}
             onPose={onPose}
@@ -345,7 +335,10 @@ function SceneBody({
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[5, 0, 8]}
-        onClick={() => onSelect(null)}
+        onClick={(event) => {
+          if (!isClick(event)) return;
+          onSelect(null);
+        }}
       >
         <planeGeometry args={[60, 40]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
@@ -360,6 +353,35 @@ function SceneBody({
         maxDistance={40}
         target={[5.4, 1.25, 2.2]}
       />
+
+      <EffectComposer multisampling={4} autoClear={false}>
+        {hoverList.length > 0 && (
+          <Outline
+            selection={hoverList}
+            selectionLayer={11}
+            edgeStrength={28}
+            pulseSpeed={0.8}
+            visibleEdgeColor="#ffffff"
+            hiddenEdgeColor="#ffffff"
+            kernelSize={KernelSize.LARGE}
+            blur
+            xRay
+          />
+        )}
+        {selectedList.length > 0 && (
+          <Outline
+            selection={selectedList}
+            selectionLayer={12}
+            edgeStrength={36}
+            pulseSpeed={0.4}
+            visibleEdgeColor="#3aa0ff"
+            hiddenEdgeColor="#3aa0ff"
+            kernelSize={KernelSize.LARGE}
+            blur
+            xRay
+          />
+        )}
+      </EffectComposer>
     </>
   );
 }
@@ -371,11 +393,9 @@ export function CanvasScene(props: {
   selected: string | null;
   hovered: string | null;
   mode: GizmoMode;
-  snap: boolean;
   ghost: boolean;
   onSelect: (id: string | null) => void;
   onHover: (id: string | null) => void;
-  onCommit: (id: string, x: number, z: number, rot: number) => void;
   onMode: (mode: GizmoMode) => void;
   onNudge: (dx: number, dz: number, dRot: number) => void;
   onPose: (id: string, patch: Partial<MachinePose>) => void;
